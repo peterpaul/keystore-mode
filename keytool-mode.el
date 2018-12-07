@@ -4,9 +4,10 @@
 ;; Copyright (C) 2018 Peterpaul Taekele Klein Haneveld
 
 ;; Author: Peterpaul Taekele Klein Haneveld <pp.kleinhaneveld@gmail.com>
+;; URL: https://github.com/peterpaul/keytool-mode.el
 ;; Version: 0.0.1
-;; Keywords: keytool tools
-;; Package-Requires: (origami s)
+;; Keywords: tools
+;; Package-Requires: ((origami "1.0") (s "1.12.0"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -33,6 +34,8 @@
 ;; IN THE SOFTWARE.
 
 ;;; Commentary:
+
+;; Elisp wrapper around the java `keytool` command
 
 ;;; Code:
 
@@ -137,7 +140,7 @@
   (switch-to-buffer file)
   (keytool-mode)
   (make-local-variable 'keystore-filename)
-  (setq keystore-filename file) 
+  (setq keystore-filename file)
   (make-local-variable 'keystore-passphrase)
   (setq keystore-passphrase nil)
   (origami-mode)
