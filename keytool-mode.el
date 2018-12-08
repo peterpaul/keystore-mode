@@ -107,6 +107,7 @@
         ))
 
 (defun keytool-reduce-list-of-strings-to-regex (list-of-strings)
+  "Reduce LIST-OF-STRINGS to a regex with multiple or clauses."
   (seq-reduce (lambda (x y) (format "%s\\|%s" x y))
               (cdr list-of-strings)
               (car list-of-strings)))
@@ -133,8 +134,8 @@
 
 (map-put origami-parser-alist 'keytool-mode (origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))
 
-(defun keytool-init (file)
-  "Initialize a new keytool buffer with a file."
+(defun keytool-open (file)
+  "Open keytool from FILE."
   (interactive "fKeystore File: ")
   (message "Opening keystore: '%s'" file)
   (switch-to-buffer file)
@@ -147,12 +148,14 @@
   (keytool-list))
 
 (defun keytool-get-passphrase-lazy ()
+  "Get keystore passphrase and remember for next time."
   (when (not keystore-passphrase)
     (setq keystore-passphrase
           (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
   keystore-passphrase)
 
 (defun keytool-list-style (style)
+  "Invoke `keytool -list' command with STYLE."
   (when keystore-filename
     (let ((inhibit-read-only t)
           (keystore-password (keytool-get-passphrase-lazy)))
@@ -170,14 +173,17 @@
       (origami-close-all-nodes (get-buffer keystore-filename)))))
 
 (defun keytool-list ()
+  "Invoke `keytool -list'."
   (interactive)
   (keytool-list-style ""))
 
 (defun keytool-list-verbose ()
+  "Invoke `keytool -list -v'."
   (interactive)
   (keytool-list-style "-v"))
 
 (defun keytool-list-rfc ()
+  "Invoke `keytool -list -rfc'."
   (interactive)
   (keytool-list-style "-rfc"))
 
@@ -268,7 +274,7 @@ This function changes the position of the point, so wrap calls to this in `save-
                              alias) cert-buffer))))
 
 (defun keytool-importkeystore (srckeystore)
-  "Import an entire keystore into this one."
+  "Import SRCKEYSTORE into this one."
   (interactive "fKeystore to import: ")
   (let ((srcstorepass (read-passwd (format "Enter keystore passphrase of '%s': " srckeystore)))
         (deststorepass (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
