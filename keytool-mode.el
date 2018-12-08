@@ -217,6 +217,13 @@ This function changes the position of the point, so wrap calls to this in `save-
           (substring line 0 (s-index-of "," line))
         nil))))
 
+(defun keytool--do-delete (keystore storepass alias)
+  "Delete an entry with ALIAS from KEYSTORE with STOREPASS."
+  (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -alias '%s'"
+                         keystore
+                         storepass
+                         alias)))
+
 (defun keytool-delete (pos)
   "Delete the keystore entry at point POS."
   (interactive "d")
@@ -226,10 +233,7 @@ This function changes the position of the point, so wrap calls to this in `save-
            (keystore-pass (read-passwd (format "Enter keystore passphrase to delete certificate '%s' from '%s': "
                                                alias
                                                keystore-filename))))
-      (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -alias '%s'"
-                             keystore-filename
-                             keystore-pass
-                             alias))
+      (keytool--do-delete keystore-filename keystore-pass alias)
       (keytool-list))))
 
 (defun keytool-delete-force (pos)
@@ -238,10 +242,7 @@ This function changes the position of the point, so wrap calls to this in `save-
   (save-excursion
     (let* ((alias (or (keytool--parse-alias-from-line-at-pos pos)
                      (error "Current line does not contain an alias"))))
-      (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -alias '%s'"
-                             keystore-filename
-                             keystore-passphrase
-                             alias))
+      (keytool--do-delete keystore-filename keystore-passphrase alias)
       (keytool-list))))
 
 (defun keytool-changealias (pos destalias)
