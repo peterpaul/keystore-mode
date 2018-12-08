@@ -285,6 +285,29 @@ This function changes the position of the point, so wrap calls to this in `save-
                            deststorepass))
     (keytool-list)))
 
+(defun keytool--do-genkeypair (keystore storetype storepass keysize validity alias)
+  (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storetype '%s' -storepass '%s'"
+                               keysize
+                               validity
+                               alias
+                               keystore
+                               storetype
+                               storepass)))
+
+(defun keytool-genkeypair (keystore storetype storepass storepass-repeat keysize validity alias)
+  ""
+  (interactive
+   (list (read-file-name "Keystore File: ")
+         (completing-read "Keystore Type: " '("JKS" "PKCS12") nil t nil nil "JKS")
+         (read-passwd "Keystore Passphrase: ")
+         (read-passwd "Keystore Passphrase (repeat): ")
+         (completing-read "Key Size: " '("1024" "2048" "4096" "8192") nil t nil nil "4096")
+         (read-number "Validity (Days): " 365)
+         (read-string "Alias: ")))
+  (if (equal storepass storepass-repeat)
+      (keytool--do-genkeypair keystore storetype storepass keysize validity alias)
+    (error "The two provided Keystore Passphrases do not match")))
+
 (provide 'keytool-mode)
 
 ;;; keytool-mode.el ends here
