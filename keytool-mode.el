@@ -162,9 +162,10 @@
       (erase-buffer)
       (insert
        (shell-command-to-string
-        (format "keytool -list -keystore '%s' -storepass '%s' %s"
+        (format "keytool -list -keystore '%s' -storepass '%s' -storetype '%s' %s"
                 keystore-filename
                 keystore-password
+                (keytool--storetype-from-name keystore-filename)
                 style)))
       (goto-char (point-min))
       (while (re-search-forward "\n\n+" nil t)
@@ -198,9 +199,10 @@
       (set-buffer cert-buffer)
       (shell-command-on-region (point-min)
                                (point-max)
-                               (format "keytool -importcert -keystore '%s' -storepass '%s' -alias '%s' -noprompt"
+                               (format "keytool -importcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -noprompt"
                                        keystore-file
                                        keystore-pass
+                                       (keytool--storetype-from-name keystore-file)
                                        cert-alias)))
     (keytool-list)))
 
@@ -219,9 +221,10 @@ This function changes the position of the point, so wrap calls to this in `save-
 
 (defun keytool--do-delete (keystore storepass alias)
   "Delete an entry with ALIAS from KEYSTORE with STOREPASS."
-  (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -alias '%s'"
+  (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s'"
                          keystore
                          storepass
+                         (keytool--storetype-from-name keystore)
                          alias)))
 
 (defun keytool-delete (pos)
@@ -255,9 +258,10 @@ This function changes the position of the point, so wrap calls to this in `save-
                                                alias
                                                destalias
                                                keystore-filename))))
-      (shell-command (format "keytool -changealias -keystore '%s' -storepass '%s' -alias '%s' -destalias '%s'"
+      (shell-command (format "keytool -changealias -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -destalias '%s'"
                              keystore-filename
                              keystore-pass
+                             (keytool--storetype-from-name keystore-filename)
                              alias
                              destalias))
       (keytool-list))))
@@ -269,9 +273,10 @@ This function changes the position of the point, so wrap calls to this in `save-
     (let* ((alias (or (keytool--parse-alias-from-line-at-pos pos)
                      (error "Current line does not contain an alias")))
            (cert-buffer (get-buffer-create (format "%s.pem" alias))))
-      (shell-command (format "keytool -exportcert -keystore '%s' -storepass '%s' -alias '%s' -rfc"
+      (shell-command (format "keytool -exportcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -rfc"
                              keystore-filename
                              keystore-passphrase
+                             (keytool--storetype-from-name keystore-filename)
                              alias) cert-buffer))))
 
 (defun keytool-importkeystore (srckeystore)
@@ -279,35 +284,56 @@ This function changes the position of the point, so wrap calls to this in `save-
   (interactive "fKeystore to import: ")
   (let ((srcstorepass (read-passwd (format "Enter keystore passphrase of '%s': " srckeystore)))
         (deststorepass (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
-    (shell-command (format "keytool -importkeystore -srckeystore '%s' -srcstorepass '%s' -destkeystore '%s' -deststorepass '%s' -noprompt"
+    (shell-command (format "keytool -importkeystore -srckeystore '%s' -srcstorepass '%s' -srcstoretype '%s' -destkeystore '%s' -deststorepass '%s' -deststoretype '%s' -noprompt"
                            srckeystore
                            srcstorepass
+                           (keytool--storetype-from-name srckeystore)
                            keystore-filename
-                           deststorepass))
+                           deststorepass
+                           (keytool--storetype-from-name keystore-filename)))
     (keytool-list)))
 
-(defun keytool--do-genkeypair (keystore storetype storepass keysize validity alias)
-  (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storetype '%s' -storepass '%s'"
+(defun keytool--do-genkeypair (keystore storepass keysize validity alias)
+  (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storepass '%s' -storetype '%s'"
                                keysize
                                validity
                                alias
                                keystore
-                               storetype
-                               storepass)))
+                               storepass
+                               (keytool--storetype-from-name keystore-filename))))
 
-(defun keytool-genkeypair (keystore storetype storepass storepass-repeat keysize validity alias)
+(defun keytool-genkeypair (keystore storepass storepass-repeat keysize validity alias)
   ""
   (interactive
    (list (read-file-name "Keystore File: ")
-         (completing-read "Keystore Type: " '("JKS" "PKCS12") nil t nil nil "JKS")
          (read-passwd "Keystore Passphrase: ")
          (read-passwd "Keystore Passphrase (repeat): ")
          (completing-read "Key Size: " '("1024" "2048" "4096" "8192") nil t nil nil "4096")
          (read-number "Validity (Days): " 365)
          (read-string "Alias: ")))
   (if (equal storepass storepass-repeat)
-      (keytool--do-genkeypair keystore storetype storepass keysize validity alias)
+      (keytool--do-genkeypair keystore storepass keysize validity alias)
     (error "The two provided Keystore Passphrases do not match")))
+
+(defun keytool--jks? (keystore)
+  (s-ends-with? ".jks" keystore t))
+
+(defun keytool--pkcs12? (keystore)
+  (s-ends-with? ".p12" keystore t))
+
+(setq keytool-default-storetype "JKS")
+
+(defun keytool--storetype-from-name (keystore)
+  "Try to determine the keystore type from the KEYSTORE filename extension.
+
+When the type cannot be determined from the extension, this function returns
+`keytool-default-storetype'.
+
+Returns \"JKS\" or \"PKCS12\"."
+  (pcase keystore
+    ((pred keytool--jks?)    "JKS")
+    ((pred keytool--pkcs12?) "PKCS12")
+    (_                       keytool-default-storetype)))
 
 (provide 'keytool-mode)
 
