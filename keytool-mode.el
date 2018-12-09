@@ -154,19 +154,36 @@
           (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
   keystore-passphrase)
 
+(defun keytool--parse-keystore ()
+  (let* ((out)
+         (keytool-info (keytool--do-list keystore-filename (keytool-get-passphrase-lazy) ""))
+         (keystore-entries (cdddr
+                            (split-string (s-replace ", \n" ", " keytool-info)
+                                          "[\n\r]+" t))))
+    (dolist (entry keystore-entries out)
+      (setq out (cons (split-string entry "," nil " \t") out)))))
+
+(defun keytool--do-list (keystore-filename keystore-password style)
+  (shell-command-to-string
+   (format "keytool -list -keystore '%s' -storepass '%s' -storetype '%s' %s"
+           keystore-filename
+           keystore-password
+           (keytool--storetype-from-name keystore-filename)
+           style)))
+
 (defun keytool-list-style (style)
   "Invoke `keytool -list' command with STYLE."
   (when keystore-filename
     (let ((inhibit-read-only t)
           (keystore-password (keytool-get-passphrase-lazy)))
       (erase-buffer)
-      (insert
-       (shell-command-to-string
-        (format "keytool -list -keystore '%s' -storepass '%s' -storetype '%s' %s"
-                keystore-filename
-                keystore-password
-                (keytool--storetype-from-name keystore-filename)
-                style)))
+      ;; (insert
+      ;;  (let ((out))
+      ;;    (dolist (line (keytool--parse-keystore) out)
+      ;;      (setq out (if out
+      ;;                    (format "%s\n%s" out line)
+      ;;                  line)))))
+      (insert (keytool--do-list keystore-filename keystore-password style))
       (goto-char (point-min))
       (while (re-search-forward "\n\n+" nil t)
         (replace-match "\n\n" nil nil))
