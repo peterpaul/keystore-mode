@@ -118,34 +118,11 @@
             (cons (keytool-reduce-list-of-strings-to-regex keytool-syntax-keywords)
                   font-lock-keyword-face)))
 
-(define-derived-mode keytool-mode special-mode "keytool"
-  (define-key keytool-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
-  (define-key keytool-mode-map (kbd "c") 'keytool-changealias)
-  (define-key keytool-mode-map (kbd "d") 'keytool-delete)
-  (define-key keytool-mode-map (kbd "D") 'keytool-delete-force)
-  (define-key keytool-mode-map (kbd "e") 'keytool-exportcert)
-  (define-key keytool-mode-map (kbd "g") 'keytool-list)
-  (define-key keytool-mode-map (kbd "i") 'keytool-importcert)
-  (define-key keytool-mode-map (kbd "I") 'keytool-importkeystore)
-  (define-key keytool-mode-map (kbd "q") 'kill-this-buffer)
-  (define-key keytool-mode-map (kbd "r") 'keytool-list-rfc)
-  (define-key keytool-mode-map (kbd "v") 'keytool-list-verbose)
+(define-derived-mode keytool-details-mode special-mode "keytool"
+  (define-key keytool-details-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
   (setq font-lock-defaults '(keytool-highlights)))
 
-(map-put origami-parser-alist 'keytool-mode (origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))
-
-(defun keytool-open (file)
-  "Open keytool from FILE."
-  (interactive "fKeystore File: ")
-  (message "Opening keystore: '%s'" file)
-  (switch-to-buffer file)
-  (keytool-mode)
-  (make-local-variable 'keystore-filename)
-  (setq keystore-filename file)
-  (make-local-variable 'keystore-passphrase)
-  (setq keystore-passphrase nil)
-  (origami-mode)
-  (keytool-list))
+(map-put origami-parser-alist 'keytool-details-mode (origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))
 
 (defun keytool-get-passphrase-lazy ()
   "Get keystore passphrase and remember for next time."
@@ -154,14 +131,31 @@
           (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
   keystore-passphrase)
 
+(defun keytool--record-of-size-5 (record)
+  (eq 5 (length record)))
+
+(defun keytool--prepare-record (record)
+  (let* ((alias (nth 0 record))
+         (type (nth 3 record))
+         (fingerprint-field (nth 4 record))
+         (fingerprint (s-replace ":" ""
+                                 (substring fingerprint-field (+ 2 (s-index-of ": " fingerprint-field))))))
+    (vector fingerprint type alias)))
+
 (defun keytool--parse-keystore ()
   (let* ((out)
+         (entry-index 0)
          (keytool-info (keytool--do-list keystore-filename (keytool-get-passphrase-lazy) ""))
-         (keystore-entries (cdddr
-                            (split-string (s-replace ", \n" ", " keytool-info)
-                                          "[\n\r]+" t))))
+         (keystore-entries
+          (split-string (s-replace ", \n" ", " keytool-info)
+                        "[\n\r]+" t)))
     (dolist (entry keystore-entries out)
-      (setq out (cons (split-string entry "," nil " \t") out)))))
+      (let ((record (split-string entry "," nil " \t")))
+        (when (keytool--record-of-size-5 record)
+          (progn
+            (setq entry-index (+ 1 entry-index))
+            (setq out (cons (list (number-to-string entry-index) (keytool--prepare-record record))
+                            out))))))))
 
 (defun keytool--do-list (keystore-filename keystore-password style)
   (shell-command-to-string
@@ -171,24 +165,58 @@
            (keytool--storetype-from-name keystore-filename)
            style)))
 
+(defun keytool--read-entries-from-keystore ()
+  "Recompute tabulated-list-entries."
+  (setq tabulated-list-entries (keytool--parse-keystore)))
+
+(defun keytool-mark-delete (&optional _num)
+  "Mark a keystore entrie for deletion and move to the next line."
+  (interactive "p")
+  (tabulated-list-put-tag "D" t))
+
+(defun keytool--get-alias (id)
+  "Retrieve alias for keystore entry with ID."
+  (elt (cadr (assoc id tabulated-list-entries)) 2))
+
+(defun keytool-execute ()
+  "Execute marked changes (i.e. deletes)."
+  (interactive)
+  (let (delete-list cmd keytool-entry)
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (setq cmd (char-after))
+        (unless (eq cmd ?\s)
+          ;; This is the key KEYTOOL-ENTRY.
+          (setq keytool-entry (tabulated-list-get-id))
+          (cond ((eq cmd ?D)
+                 (push keytool-entry delete-list))))
+        (forward-line)))
+    (dolist (entry-id delete-list)
+      (message "Deleting: '%s'" (keytool--get-alias entry-id))
+      (keytool--do-delete keystore-filename (keytool-get-passphrase-lazy) (keytool--get-alias entry-id)))
+    (revert-buffer)
+    (goto-char (point-min))))
+
 (defun keytool-list-style (style)
   "Invoke `keytool -list' command with STYLE."
   (when keystore-filename
     (let ((inhibit-read-only t)
-          (keystore-password (keytool-get-passphrase-lazy)))
-      (erase-buffer)
-      ;; (insert
-      ;;  (let ((out))
-      ;;    (dolist (line (keytool--parse-keystore) out)
-      ;;      (setq out (if out
-      ;;                    (format "%s\n%s" out line)
-      ;;                  line)))))
-      (insert (keytool--do-list keystore-filename keystore-password style))
-      (goto-char (point-min))
-      (while (re-search-forward "\n\n+" nil t)
-        (replace-match "\n\n" nil nil))
-      (goto-char (point-min))
-      (origami-close-all-nodes (get-buffer keystore-filename)))))
+          (keystore keystore-filename)
+          (storepass (keytool-get-passphrase-lazy))
+          (buf (get-buffer-create (format "*Keystore details: %s*" keystore-filename))))
+      (with-current-buffer buf
+        (keytool-details-mode)
+        (origami-mode)
+        (erase-buffer)
+        (insert (keytool--do-list keystore storepass style))
+        (goto-char (point-min))
+        (while (re-search-forward "\n\n+" nil t)
+          (replace-match "\n\n" nil nil))
+        (goto-char (point-min))
+        (origami-close-all-nodes buf)
+        (switch-to-buffer-other-window buf)
+        ))))
 
 (defun keytool-list ()
   "Invoke `keytool -list'."
@@ -221,20 +249,8 @@
                                        keystore-pass
                                        (keytool--storetype-from-name keystore-file)
                                        cert-alias)))
-    (keytool-list)))
-
-(defun keytool--parse-alias-from-line-at-pos (pos)
-  "Try to parse an aliase from the line at POS.
-
-This function changes the position of the point, so wrap calls to this in `save-excursion'"
-  (let* ((beg (progn (beginning-of-line) (point)))
-         (end (progn (end-of-line) (point)))
-         (line (buffer-substring-no-properties beg end)))
-    (if (s-starts-with? "Alias name: " line)
-        (s-replace-regexp "Alias name: " "" line)
-      (if (s-contains? "," line)
-          (substring line 0 (s-index-of "," line))
-        nil))))
+    (revert-buffer)
+    (goto-char (point-min))))
 
 (defun keytool--do-delete (keystore storepass alias)
   "Delete an entry with ALIAS from KEYSTORE with STOREPASS."
@@ -244,33 +260,11 @@ This function changes the position of the point, so wrap calls to this in `save-
                          (keytool--storetype-from-name keystore)
                          alias)))
 
-(defun keytool-delete (pos)
-  "Delete the keystore entry at point POS."
-  (interactive "d")
-  (save-excursion
-    (let* ((alias (or (keytool--parse-alias-from-line-at-pos pos)
-                     (error "Current line does not contain an alias")))
-           (keystore-pass (read-passwd (format "Enter keystore passphrase to delete certificate '%s' from '%s': "
-                                               alias
-                                               keystore-filename))))
-      (keytool--do-delete keystore-filename keystore-pass alias)
-      (keytool-list))))
-
-(defun keytool-delete-force (pos)
-  "Delete the keystore entry at point POS."
-  (interactive "d")
-  (save-excursion
-    (let* ((alias (or (keytool--parse-alias-from-line-at-pos pos)
-                     (error "Current line does not contain an alias"))))
-      (keytool--do-delete keystore-filename keystore-passphrase alias)
-      (keytool-list))))
-
 (defun keytool-changealias (pos destalias)
   "Move an existing keystore entry from the line at POS to DESTALIAS."
   (interactive "d\nsDestination alias: ")
   (save-excursion
-    (let* ((alias (or (keytool--parse-alias-from-line-at-pos pos)
-                     (error "Current line does not contain an alias")))
+    (let* ((alias (keytool--get-alias (tabulated-list-get-id)))
            (keystore-pass (read-passwd (format "Enter keystore passphrase to change alias '%s' to '%s' in '%s': "
                                                alias
                                                destalias
@@ -280,15 +274,15 @@ This function changes the position of the point, so wrap calls to this in `save-
                              keystore-pass
                              (keytool--storetype-from-name keystore-filename)
                              alias
-                             destalias))
-      (keytool-list))))
+                             destalias))))
+  (revert-buffer)
+  (goto-char (point-min)))
 
 (defun keytool-exportcert (pos)
   "Export the certificate from the line at POS."
   (interactive "d")
   (save-excursion
-    (let* ((alias (or (keytool--parse-alias-from-line-at-pos pos)
-                     (error "Current line does not contain an alias")))
+    (let* ((alias (keytool--get-alias (tabulated-list-get-id)))
            (cert-buffer (get-buffer-create (format "%s.pem" alias))))
       (shell-command (format "keytool -exportcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -rfc"
                              keystore-filename
@@ -308,7 +302,8 @@ This function changes the position of the point, so wrap calls to this in `save-
                            keystore-filename
                            deststorepass
                            (keytool--storetype-from-name keystore-filename)))
-    (keytool-list)))
+    (revert-buffer)
+    (goto-char (point-min))))
 
 (defun keytool--do-genkeypair (keystore storepass keysize validity alias)
   (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storepass '%s' -storetype '%s'"
@@ -351,6 +346,49 @@ Returns \"JKS\" or \"PKCS12\"."
     ((pred keytool--jks?)    "JKS")
     ((pred keytool--pkcs12?) "PKCS12")
     (_                       keytool-default-storetype)))
+
+(defvar keytool-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map tabulated-list-mode-map)
+    (define-key map "d" 'keytool-mark-delete)
+    (define-key map "q" 'kill-this-buffer)
+    (define-key map "x" 'keytool-execute)
+    (define-key map "c" 'keytool-changealias)
+    (define-key map "e" 'keytool-exportcert)
+    (define-key map "i" 'keytool-importcert)
+    (define-key map "I" 'keytool-importkeystore)
+    (define-key map "l" 'keytool-list)
+    (define-key map "r" 'keytool-list-rfc)
+    (define-key map "v" 'keytool-list-verbose)
+    map)
+  "Local keymap for `keytool-mode' buffers.")
+
+(define-derived-mode keytool-mode tabulated-list-mode "keytool"
+  "\\<keytool-mode-map>
+\\{keytool-mode-map}"
+  (setq tabulated-list-format
+        `[("fingerprint" 64 nil)
+          ("type"        20 t)
+          ("alias"       64 t)])
+  (setq tabulated-list-padding 2)
+  (setq tabulated-list-sort-key (cons "alias" nil))
+  (add-hook 'tabulated-list-revert-hook 'keytool--read-entries-from-keystore nil t)
+  (tabulated-list-init-header))
+
+(defun list-keytool (file)
+  "Open keytool from FILE."
+  (interactive "fKeystore File: ")
+  (message "Opening keystore: '%s'" file)
+  (let ((buf (get-buffer-create file)))
+    (with-current-buffer buf
+      (keytool-mode)
+      (make-local-variable 'keystore-filename)
+      (setq keystore-filename file)
+      (make-local-variable 'keystore-passphrase)
+      (setq keystore-passphrase nil)
+      (keytool--read-entries-from-keystore)  
+      (tabulated-list-print t)
+      (switch-to-buffer file))))
 
 (provide 'keytool-mode)
 
