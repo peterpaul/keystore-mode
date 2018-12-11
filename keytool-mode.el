@@ -192,9 +192,10 @@
           (cond ((eq cmd ?D)
                  (push keytool-entry delete-list))))
         (forward-line)))
-    (dolist (entry-id delete-list)
-      (message "Deleting: '%s'" (keytool--get-alias entry-id))
-      (keytool--do-delete keystore-filename (keytool-get-passphrase-lazy) (keytool--get-alias entry-id)))
+    (when (y-or-n-p (format "Are you sure you want to delete: %s?" (mapcar #'keytool--get-alias delete-list)))
+      (dolist (entry-id delete-list)
+        (message "Deleting: '%s'" (keytool--get-alias entry-id))
+        (keytool--do-delete keystore-filename (keytool-get-passphrase-lazy) (keytool--get-alias entry-id))))
     (revert-buffer)
     (goto-char (point-min))))
 
