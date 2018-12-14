@@ -238,7 +238,7 @@
   (interactive)
   (keytool-list-style "-rfc"))
 
-(defun keytool-importcert (cert-buffer cert-alias)
+(defun keytool-importcert-buffer (cert-buffer cert-alias)
   "Import certificate from CERT-BUFFER with alias CERT-ALIAS."
   (interactive "bBuffer with certificate to import: \nsSet alias for certificate: ")
   (let ((keystore-file keystore-filename)
@@ -357,7 +357,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "x" 'keytool-execute)
     (define-key map "c" 'keytool-changealias)
     (define-key map "e" 'keytool-exportcert)
-    (define-key map "i" 'keytool-importcert)
+    (define-key map "i" 'keytool-importcert-buffer)
     (define-key map "I" 'keytool-importkeystore)
     (define-key map "l" 'keytool-list)
     (define-key map "r" 'keytool-list-rfc)
