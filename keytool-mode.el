@@ -256,6 +256,21 @@
                                        cert-alias))))
   (keytool-render))
 
+(defun keytool-importcert-file (cert-file cert-alias)
+  "Import certificate from CERT-FILE with alias CERT-ALIAS."
+  (interactive "fFile with certificate to import: \nsSet alias for certificate: ")
+  (let ((keystore-file keystore-filename)
+        (keystore-pass (read-passwd (format "Enter keystore passphrase to import certificate from '%s' to '%s': "
+                                            cert-file
+                                            keystore-filename))))
+    (shell-command (format "keytool -importcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -file '%s' -noprompt"
+                           keystore-file
+                           keystore-pass
+                           (keytool--storetype-from-name keystore-file)
+                           cert-alias
+                           cert-file)))
+  (keytool-render))
+
 (defun keytool--do-delete (keystore storepass alias)
   "Delete an entry with ALIAS from KEYSTORE with STOREPASS."
   (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s'"
@@ -357,7 +372,8 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "x" 'keytool-execute)
     (define-key map "c" 'keytool-changealias)
     (define-key map "e" 'keytool-exportcert)
-    (define-key map "i" 'keytool-importcert-buffer)
+    (define-key map "ib" 'keytool-importcert-buffer)
+    (define-key map "if" 'keytool-importcert-file)
     (define-key map "I" 'keytool-importkeystore)
     (define-key map "l" 'keytool-list)
     (define-key map "r" 'keytool-list-rfc)
