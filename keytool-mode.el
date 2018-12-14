@@ -178,6 +178,11 @@
   "Retrieve alias for keystore entry with ID."
   (elt (cadr (assoc id tabulated-list-entries)) 2))
 
+(defun keytool-render ()
+  "Render buffer."
+  (revert-buffer)
+  (goto-char (point-min)))
+
 (defun keytool-execute ()
   "Execute marked changes (i.e. deletes)."
   (interactive)
@@ -195,9 +200,8 @@
     (when (y-or-n-p (format "Are you sure you want to delete: %s?" (mapcar #'keytool--get-alias delete-list)))
       (dolist (entry-id delete-list)
         (message "Deleting: '%s'" (keytool--get-alias entry-id))
-        (keytool--do-delete keystore-filename (keytool-get-passphrase-lazy) (keytool--get-alias entry-id))))
-    (revert-buffer)
-    (goto-char (point-min))))
+        (keytool--do-delete keystore-filename (keytool-get-passphrase-lazy) (keytool--get-alias entry-id)))))
+  (keytool-render))
 
 (defun keytool-list-style (style)
   "Invoke `keytool -list' command with STYLE."
@@ -249,9 +253,8 @@
                                        keystore-file
                                        keystore-pass
                                        (keytool--storetype-from-name keystore-file)
-                                       cert-alias)))
-    (revert-buffer)
-    (goto-char (point-min))))
+                                       cert-alias))))
+  (keytool-render))
 
 (defun keytool--do-delete (keystore storepass alias)
   "Delete an entry with ALIAS from KEYSTORE with STOREPASS."
@@ -276,8 +279,7 @@
                              (keytool--storetype-from-name keystore-filename)
                              alias
                              destalias))))
-  (revert-buffer)
-  (goto-char (point-min)))
+  (keytool-render))
 
 (defun keytool-exportcert (pos)
   "Export the certificate from the line at POS."
@@ -302,9 +304,8 @@
                            (keytool--storetype-from-name srckeystore)
                            keystore-filename
                            deststorepass
-                           (keytool--storetype-from-name keystore-filename)))
-    (revert-buffer)
-    (goto-char (point-min))))
+                           (keytool--storetype-from-name keystore-filename))))
+  (keytool-render))
 
 (defun keytool--do-genkeypair (keystore storepass keysize validity alias)
   (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storepass '%s' -storetype '%s'"
