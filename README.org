@@ -1,4 +1,4 @@
-#+TITLE: Keytool Mode
+#+TITLE: Keystore Mode
 #+OPTIONS: toc:2
 
 A major mode for viewing and managing (java) keystores in Emacs.
@@ -19,41 +19,41 @@ The mode defines the following keybindings:
 
 | Key | Command                   | Description                                                          |
 |-----+---------------------------+----------------------------------------------------------------------|
-| d   | keytool-mark-delete       | Mark entry under point for deletion                                  |
-| x   | keytool-execute           | Execute marked changes (deletes) guarded by =y-or-n-p=               |
-| c   | keytool-changealias       | Change alias for entry under point using =keytool -changealias=      |
-| e   | keytool-exportcert        | Export certificate for entry under point using =keytool -exportcert= |
-| ib  | keytool-importcert-buffer | Import certificate from buffer using =keytool -importcert=           |
-| if  | keytool-importcert-file   | Import certificate from file using =keytool -importcert=             |
-| I   | keytool-importkeystore    | Import a full keystore from file usig =keytool -importkeystore=      |
-| l   | keytool-list              | Open new buffer with output of =keytool -list=                       |
-| r   | keytool-list-rfc          | Open new buffer with output of =keytool -list -rfc=                  |
-| v   | keytool-list-verbose      | Open new buffer with output of =keytool -list -v=                    |
+| d   | keystore-mark-delete       | Mark entry under point for deletion                                  |
+| x   | keystore-execute           | Execute marked changes (deletes) guarded by =y-or-n-p=               |
+| c   | keystore-changealias       | Change alias for entry under point using =keytool -changealias=      |
+| e   | keystore-exportcert        | Export certificate for entry under point using =keytool -exportcert= |
+| ib  | keystore-importcert-buffer | Import certificate from buffer using =keytool -importcert=           |
+| if  | keystore-importcert-file   | Import certificate from file using =keytool -importcert=             |
+| I   | keystore-importkeystore    | Import a full keystore from file usig =keytool -importkeystore=      |
+| l   | keystore-list              | Open new buffer with output of =keytool -list=                       |
+| r   | keystore-list-rfc          | Open new buffer with output of =keytool -list -rfc=                  |
+| v   | keystore-list-verbose      | Open new buffer with output of =keytool -list -v=                    |
 | q   | kill-this-buffer          | Kill the buffer and any local variables                              |
 
-The =keytool-list-rfc= command opens a buffer where the certificates are folded (using [[https://github.com/gregsexton/origami.el][origami.el]]).
+The =keystore-list-rfc= command opens a buffer where the certificates are folded (using [[https://github.com/gregsexton/origami.el][origami.el]]).
 The folding can be toggled with the =<TAB>= key.
 
 * Installation
 ** straight-use-package
 #+CAPTION: init.el configuration with use-package and straight
 #+BEGIN_SRC elisp
-(use-package keytool-mode
+(use-package keystore-mode
   :straight
-  (keytool-mode
+  (keystore-mode
    :type git
    :host github
-   :repo "peterpaul/keytool-mode.el"))
+   :repo "peterpaul/keystore-mode"))
 #+END_SRC
 
 ** quelpa-use-package
 #+CAPTION: init.el configuration with quelpa-use-package
 #+BEGIN_SRC elisp
-(use-package keytool-mode
+(use-package keystore-mode
   :quelpa
-  (keytool-mode
+  (keystore-mode
    :fetcher github
-   :repo "peterpaul/keytool-mode.el"))
+   :repo "peterpaul/keystore-mode"))
 #+END_SRC
 
 * Future ideas
