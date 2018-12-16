@@ -240,27 +240,79 @@
                            (keystore--storetype-from-name keystore-filename))))
   (keystore-render))
 
-(defun keystore--do-genkeypair (keystore storepass keysize validity alias)
-  (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storepass '%s' -storetype '%s'"
+(defun keystore--blank-string-p (str)
+  "Return t if STR contains only whitespace, is empty or is nil."
+  (if str
+      (string-equal (s-replace-regexp "^[[:space:]]+" "" str) "")
+    't))
+
+(defun keystore--dname-prompt-element (keyname prompt &optional previous-result)
+  "Prompt the user to enter a dname element value.
+
+Returns a string with the dname element, including the KEYNAME, like \"CN=<value>\",
+or nil if the user entered a blank string.
+
+If previous-result is not nil, then the default value is parsed from the previous result.
+
+TODO escape commas in the value, and unescape when parsing."
+  (let* ((default-value (and previous-result
+                           (nth 1 (s-split "=" previous-result))))
+         (actual-prompt (if default-value
+                            (format "%s[%s] " prompt default-value)
+                          prompt))
+         (value (read-string actual-prompt nil nil default-value)))
+    (if (keystore--blank-string-p value)
+        nil
+      (format "%s=%s" keyname value))))
+
+(defun keystore-ask-dname ()
+  "Ask the user for dname entries and returns a dname"
+  (interactive)
+  (let (common-name organization-unit organization-name locality-name state-name country dname dname-elements)
+    (while (not (and dname
+                 (y-or-n-p (format "Do you accept: '%s'?" dname))))
+      (setq dname-elements (list
+                            (setq common-name (keystore--dname-prompt-element "CN" "Common Name: " common-name))
+                            (setq organization-unit (keystore--dname-prompt-element "OU" "Organization Unit: " organization-unit))
+                            (setq organization-name (keystore--dname-prompt-element "O" "Organization Name: " organization-name))
+                            (setq locality-name (keystore--dname-prompt-element "L" "Locality Name/City: " locality-name))
+                            (setq state-name (keystore--dname-prompt-element "S" "State Name/Province: " state-name))
+                            (setq country (keystore--dname-prompt-element "C" "2 Character Country Id: " country))))
+      (setq dname-elements (seq-filter 'identity dname-elements))
+      (setq dname (mapconcat 'identity dname-elements ", ")))
+    dname))
+
+(defun keystore--do-genkeypair (keystore storepass keysize validity alias dname)
+  (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storepass '%s' -storetype '%s' -dname '%s'"
                                keysize
                                validity
                                alias
                                keystore
                                storepass
-                               (keystore--storetype-from-name keystore-filename))))
+                               (keystore--storetype-from-name keystore)
+                               dname)))
 
-(defun keystore-genkeypair (keystore storepass storepass-repeat keysize validity alias)
+(defun keystore--prompt-passwd-twice (prompt)
+  (let (val1 val2)
+    (while (or (not val1)
+              (not (string-equal val1 val2)))
+      (setq val1 (read-passwd prompt))
+      (setq val2 (read-passwd (format "Repeat %s" prompt)))
+      (when (not (string-equal val1 val2))
+        (when (not (y-or-n-p "The two provided values do not match, retry?"))
+          (error "The two provided values do not match"))))
+    val1))
+
+(defun keystore-genkeypair (keystore storepass keysize validity alias dname)
   ""
   (interactive
    (list (read-file-name "Keystore File: ")
-         (read-passwd "Keystore Passphrase: ")
-         (read-passwd "Keystore Passphrase (repeat): ")
+         (keystore--prompt-passwd-twice "Keystore Passphrase: ")
          (completing-read "Key Size: " '("1024" "2048" "4096" "8192") nil t nil nil "4096")
          (read-number "Validity (Days): " 365)
-         (read-string "Alias: ")))
-  (if (equal storepass storepass-repeat)
-      (keystore--do-genkeypair keystore storepass keysize validity alias)
-    (error "The two provided Keystore Passphrases do not match")))
+         (read-string "Alias: ")
+         (keystore-ask-dname)))
+  (keystore--do-genkeypair keystore storepass keysize validity alias dname))
 
 (defun keystore--jks? (keystore)
   (s-ends-with? ".jks" keystore t))
