@@ -15,12 +15,14 @@ asked to enter the keystore password. This password is stored in a buffer local
 variable. It is recommended to kill the buffer (bound to =q=) directly after
 you're done with the keystore.
 
-![list-keystore](../assets/list-keystore.png?raw=true)
+#+CAPTION: Screenshot of list-keystore
+#+NAME:    fig:list-keystore
+[[../assets/list-keystore.png?raw=true][list-keystore]]
 
 The mode defines the following keybindings:
 
-| Key | Command                   | Description                                                          |
-|-----+---------------------------+----------------------------------------------------------------------|
+| Key | Command                    | Description                                                          |
+|-----+----------------------------+----------------------------------------------------------------------|
 | d   | keystore-mark-delete       | Mark entry under point for deletion                                  |
 | x   | keystore-execute           | Execute marked changes (deletes) guarded by =y-or-n-p=               |
 | c   | keystore-changealias       | Change alias for entry under point using =keytool -changealias=      |
@@ -31,7 +33,7 @@ The mode defines the following keybindings:
 | l   | keystore-list              | Open new buffer with output of =keytool -list=                       |
 | r   | keystore-list-rfc          | Open new buffer with output of =keytool -list -rfc=                  |
 | v   | keystore-list-verbose      | Open new buffer with output of =keytool -list -v=                    |
-| q   | kill-this-buffer          | Kill the buffer and any local variables                              |
+| q   | kill-this-buffer           | Kill the buffer and any local variables                              |
 
 The =keystore-list-rfc= command opens a buffer where the certificates are folded (using [[https://github.com/gregsexton/origami.el][origami.el]]).
 The folding can be toggled with the =<TAB>= key.
