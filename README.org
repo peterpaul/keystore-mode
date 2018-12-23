@@ -17,7 +17,7 @@ you're done with the keystore.
 
 #+CAPTION: Screenshot of list-keystore
 #+NAME:    fig:list-keystore
-[[../assets/list-keystore.png?raw=true][list-keystore]]
+[[../assets/list-keystore.png?raw=true]]
 
 The mode defines the following keybindings:
 
