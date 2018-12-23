@@ -62,4 +62,5 @@ The folding can be toggled with the =<TAB>= key.
 
 * Future ideas
 
-Add support =openssl= and make it a more generic/versatile keystore/certificate management tool.
+[ ] Add support for =openssl= and make it a more generic/versatile keystore/certificate management tool.
+[ ] Backup the keystore before making changes to it.
