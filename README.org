@@ -21,19 +21,19 @@ you're done with the keystore.
 
 The mode defines the following keybindings:
 
-| Key | Command                    | Description                                                          |
-|-----+----------------------------+----------------------------------------------------------------------|
-| d   | keystore-mark-delete       | Mark entry under point for deletion                                  |
-| x   | keystore-execute           | Execute marked changes (deletes) guarded by =y-or-n-p=               |
-| c   | keystore-changealias       | Change alias for entry under point using =keytool -changealias=      |
-| e   | keystore-exportcert        | Export certificate for entry under point using =keytool -exportcert= |
-| ib  | keystore-importcert-buffer | Import certificate from buffer using =keytool -importcert=           |
-| if  | keystore-importcert-file   | Import certificate from file using =keytool -importcert=             |
-| I   | keystore-importkeystore    | Import a full keystore from file usig =keytool -importkeystore=      |
-| l   | keystore-list              | Open new buffer with output of =keytool -list=                       |
-| r   | keystore-list-rfc          | Open new buffer with output of =keytool -list -rfc=                  |
-| v   | keystore-list-verbose      | Open new buffer with output of =keytool -list -v=                    |
-| q   | kill-this-buffer           | Kill the buffer and any local variables                              |
+| Key  | Command                     | Description                                                          |
+|------+-----------------------------+----------------------------------------------------------------------|
+| =d=  | keystore-toggle-mark-delete | Mark or unmark entry under point for deletion                        |
+| =x=  | keystore-execute            | Execute marked changes (deletes) guarded by =y-or-n-p=               |
+| =c=  | keystore-changealias        | Change alias for entry under point using =keytool -changealias=      |
+| =e=  | keystore-exportcert         | Export certificate for entry under point using =keytool -exportcert= |
+| =ib= | keystore-importcert-buffer  | Import certificate from buffer using =keytool -importcert=           |
+| =if= | keystore-importcert-file    | Import certificate from file using =keytool -importcert=             |
+| =I=  | keystore-importkeystore     | Import a full keystore from file usig =keytool -importkeystore=      |
+| =l=  | keystore-list               | Open new buffer with output of =keytool -list=                       |
+| =r=  | keystore-list-rfc           | Open new buffer with output of =keytool -list -rfc=                  |
+| =v=  | keystore-list-verbose       | Open new buffer with output of =keytool -list -v=                    |
+| =q=  | kill-this-buffer            | Kill the buffer and any local variables                              |
 
 The =keystore-list-rfc= command opens a buffer where the certificates are folded (using [[https://github.com/gregsexton/origami.el][origami.el]]).
 The folding can be toggled with the =<TAB>= key.

@@ -87,10 +87,14 @@
   "Recompute tabulated-list-entries."
   (setq tabulated-list-entries (keystore--parse-keystore)))
 
-(defun keystore-mark-delete (&optional _num)
-  "Mark a keystore entrie for deletion and move to the next line."
+(defun keystore-toggle-mark-delete (&optional _num)
+  "Mark a keystore entry for deletion and move to the next line."
   (interactive "p")
-  (tabulated-list-put-tag "D" t))
+  (if (save-excursion
+        (beginning-of-line)
+        (eq (char-after) ?\s))
+      (tabulated-list-put-tag "D" t)
+    (tabulated-list-put-tag " " t)))
 
 (defun keystore--get-alias (id)
   "Retrieve alias for keystore entry with ID."
@@ -118,8 +122,8 @@
     (when (y-or-n-p (format "Are you sure you want to delete: %s?" (mapcar #'keystore--get-alias delete-list)))
       (dolist (entry-id delete-list)
         (message "Deleting: '%s'" (keystore--get-alias entry-id))
-        (keystore--do-delete keystore-filename (keystore-get-passphrase-lazy) (keystore--get-alias entry-id)))))
-  (keystore-render))
+        (keystore--do-delete keystore-filename (keystore-get-passphrase-lazy) (keystore--get-alias entry-id)))
+      (keystore-render))))
 
 (defun keystore-list-style (style)
   "Invoke `keytool -list' command with STYLE."
@@ -337,7 +341,7 @@ Returns \"JKS\" or \"PKCS12\"."
 (defvar keystore-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
-    (define-key map "d" 'keystore-mark-delete)
+    (define-key map "d" 'keystore-toggle-mark-delete)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "x" 'keystore-execute)
     (define-key map "c" 'keystore-changealias)
