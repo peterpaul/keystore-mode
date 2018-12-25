@@ -228,7 +228,28 @@
                              keystore-filename
                              keystore-passphrase
                              (keystore--storetype-from-name keystore-filename)
-                             alias) cert-buffer))))
+                             alias)
+                     cert-buffer)
+      cert-buffer)))
+
+(defun keystore-printcert (pos)
+  (interactive "d")
+  (let* ((pem-buffer (keystore-exportcert pos))
+         (alias (keystore--get-alias (tabulated-list-get-id)))
+         (target-buffer (get-buffer-create (format "*printcert: %s*" alias))))
+    (with-current-buffer target-buffer
+      (keystore-details-mode)
+      (origami-mode)
+      (goto-char (point-min)))
+    (with-current-buffer pem-buffer
+      (shell-command-on-region (point-min) (point-max)
+                               "keytool -printcert"
+                               target-buffer))
+    (kill-buffer pem-buffer)
+    (with-current-buffer target-buffer
+      (goto-char (point-min))
+      (read-only-mode 1)
+      (origami-close-all-nodes target-buffer))))
 
 (defun keystore-importkeystore (srckeystore)
   "Import SRCKEYSTORE into this one."
@@ -346,6 +367,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "x" 'keystore-execute)
     (define-key map "c" 'keystore-changealias)
     (define-key map "e" 'keystore-exportcert)
+    (define-key map "p" 'keystore-printcert)
     (define-key map "ib" 'keystore-importcert-buffer)
     (define-key map "if" 'keystore-importcert-file)
     (define-key map "I" 'keystore-importkeystore)
