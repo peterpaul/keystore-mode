@@ -43,7 +43,7 @@ The folding can be toggled with the =<TAB>= key.
 ** straight-use-package
 
 #+CAPTION: init.el configuration with use-package and straight
-#+BEGIN_SRC elisp
+#+BEGIN_SRC emacs-lisp
 (use-package keystore-mode
   :straight
   (keystore-mode
@@ -55,7 +55,7 @@ The folding can be toggled with the =<TAB>= key.
 ** quelpa-use-package
 
 #+CAPTION: init.el configuration with quelpa-use-package
-#+BEGIN_SRC elisp
+#+BEGIN_SRC emacs-lisp
 (use-package keystore-mode
   :quelpa
   (keystore-mode
