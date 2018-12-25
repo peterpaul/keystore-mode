@@ -41,6 +41,7 @@ The folding can be toggled with the =<TAB>= key.
 
 * Installation
 ** straight-use-package
+
 #+CAPTION: init.el configuration with use-package and straight
 #+BEGIN_SRC elisp
 (use-package keystore-mode
@@ -52,6 +53,7 @@ The folding can be toggled with the =<TAB>= key.
 #+END_SRC
 
 ** quelpa-use-package
+
 #+CAPTION: init.el configuration with quelpa-use-package
 #+BEGIN_SRC elisp
 (use-package keystore-mode
@@ -59,6 +61,17 @@ The folding can be toggled with the =<TAB>= key.
   (keystore-mode
    :fetcher github
    :repo "peterpaul/keystore-mode"))
+#+END_SRC
+
+* Troubleshooting
+
+** Unable to operate on aliases containing (non-ascii) unicode characters.
+
+Make sure that you've configured locales correctly on your system. For example for =UTF-8=:
+
+#+CAPTION: Configure UTF-8 system locale
+#+BEGIN_SRC sh
+sudo update-locale LC_ALL=en_US.UTF-8
 #+END_SRC
 
 * Future ideas
