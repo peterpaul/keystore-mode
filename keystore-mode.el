@@ -75,13 +75,19 @@
             (setq out (cons (list (number-to-string entry-index) (keystore--prepare-record record))
                             out))))))))
 
+(defun keystore-keytool (&rest args)
+  (format "keytool %s"
+          (mapconcat 'identity
+                     (seq-filter 'identity args)
+                     " ")))
+
 (defun keystore--do-list (keystore-filename keystore-password style)
   (shell-command-to-string
-   (format "keytool -list -keystore '%s' -storepass '%s' -storetype '%s' %s"
-           keystore-filename
-           keystore-password
-           (keystore--storetype-from-name keystore-filename)
-           style)))
+   (keystore-keytool "-list"
+                     "-keystore" keystore-filename
+                     "-storepass" keystore-password
+                     "-storetype" (keystore--storetype-from-name keystore-filename)
+                     style)))
 
 (defun keystore--read-entries-from-keystore ()
   "Recompute tabulated-list-entries."
@@ -171,11 +177,12 @@
       (set-buffer cert-buffer)
       (shell-command-on-region (point-min)
                                (point-max)
-                               (format "keytool -importcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -noprompt"
-                                       keystore-file
-                                       keystore-pass
-                                       (keystore--storetype-from-name keystore-file)
-                                       cert-alias))))
+                               (keystore-keytool "-importcert"
+                                                 "-keystore" keystore-file
+                                                 "-storepass" keystore-pass
+                                                 "-storetype" (keystore--storetype-from-name keystore-file)
+                                                 "-alias" cert-alias
+                                                 "-noprompt"))))
   (keystore-render))
 
 (defun keystore-importcert-file (cert-file cert-alias)
@@ -185,21 +192,22 @@
         (keystore-pass (read-passwd (format "Enter keystore passphrase to import certificate from '%s' to '%s': "
                                             cert-file
                                             keystore-filename))))
-    (shell-command (format "keytool -importcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -file '%s' -noprompt"
-                           keystore-file
-                           keystore-pass
-                           (keystore--storetype-from-name keystore-file)
-                           cert-alias
-                           cert-file)))
+    (shell-command (keystore-keytool "-importcert"
+                                     "-keystore" keystore-file
+                                     "-storepass" keystore-pass
+                                     "-storetype" (keystore--storetype-from-name keystore-file)
+                                     "-alias" cert-alias
+                                     "-file" cert-file
+                                     "-noprompt")))
   (keystore-render))
 
 (defun keystore--do-delete (keystore storepass alias)
   "Delete an entry with ALIAS from KEYSTORE with STOREPASS."
-  (shell-command (format "keytool -delete -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s'"
-                         keystore
-                         storepass
-                         (keystore--storetype-from-name keystore)
-                         alias)))
+  (shell-command (keystore-keytool "-delete"
+                                   "-keystore" keystore
+                                   "-storepass" storepass
+                                   "-storetype" (keystore--storetype-from-name keystore)
+                                   "-alias" alias)))
 
 (defun keystore-changealias (pos destalias)
   "Move an existing keystore entry from the line at POS to DESTALIAS."
@@ -210,25 +218,27 @@
                                                alias
                                                destalias
                                                keystore-filename))))
-      (shell-command (format "keytool -changealias -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -destalias '%s'"
-                             keystore-filename
-                             keystore-pass
-                             (keystore--storetype-from-name keystore-filename)
-                             alias
-                             destalias))))
+      (shell-command (keystore-keytool "-changealias" 
+                                       "-keystore" keystore-filename
+                                       "-storepass" keystore-pass
+                                       "-storetype" (keystore--storetype-from-name keystore-filename)
+                                       "-alias" alias
+                                       "-destalias" destalias))))
   (keystore-render))
 
 (defun keystore-exportcert (pos)
-  "Export the certificate from the line at POS."
+  "Export the certificate from the line at POS.
+
+Returns the buffer containing the certificate."
   (interactive "d")
   (save-excursion
     (let* ((alias (keystore--get-alias (tabulated-list-get-id)))
            (cert-buffer (get-buffer-create (format "%s.pem" alias))))
-      (shell-command (format "keytool -exportcert -keystore '%s' -storepass '%s' -storetype '%s' -alias '%s' -rfc"
-                             keystore-filename
-                             keystore-passphrase
-                             (keystore--storetype-from-name keystore-filename)
-                             alias)
+      (shell-command (keystore-keytool "-exportcert" 
+                                       "-keystore" keystore-filename
+                                       "-storepass" keystore-passphrase
+                                       "-storetype" (keystore--storetype-from-name keystore-filename)
+                                       "-alias" alias)
                      cert-buffer)
       cert-buffer)))
 
@@ -243,7 +253,7 @@
       (goto-char (point-min)))
     (with-current-buffer pem-buffer
       (shell-command-on-region (point-min) (point-max)
-                               "keytool -printcert"
+                               (keystore-keytool "-printcert")
                                target-buffer))
     (kill-buffer pem-buffer)
     (with-current-buffer target-buffer
@@ -256,13 +266,14 @@
   (interactive "fKeystore to import: ")
   (let ((srcstorepass (read-passwd (format "Enter keystore passphrase of '%s': " srckeystore)))
         (deststorepass (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
-    (shell-command (format "keytool -importkeystore -srckeystore '%s' -srcstorepass '%s' -srcstoretype '%s' -destkeystore '%s' -deststorepass '%s' -deststoretype '%s' -noprompt"
-                           srckeystore
-                           srcstorepass
-                           (keystore--storetype-from-name srckeystore)
-                           keystore-filename
-                           deststorepass
-                           (keystore--storetype-from-name keystore-filename))))
+    (shell-command (keystore-keytool "-importkeystore"
+                                     "-srckeystore" srckeystore
+                                     "-srcstorepass" srcstorepass
+                                     "-srcstoretype" (keystore--storetype-from-name srckeystore)
+                                     "-destkeystore" keystore-filename
+                                     "-deststorepass" deststorepass
+                                     "-deststoretype" (keystore--storetype-from-name keystore-filename)
+                                     "-noprompt")))
   (keystore-render))
 
 (defun keystore--blank-string-p (str)
@@ -308,14 +319,15 @@ TODO escape commas in the value, and unescape when parsing."
     dname))
 
 (defun keystore--do-genkeypair (keystore storepass keysize validity alias dname)
-  (async-shell-command (format "keytool -genkeypair -keyalg RSA -keysize '%s' -validity '%s' -alias '%s' -keystore '%s' -storepass '%s' -storetype '%s' -dname '%s'"
-                               keysize
-                               validity
-                               alias
-                               keystore
-                               storepass
-                               (keystore--storetype-from-name keystore)
-                               dname)))
+  (async-shell-command (keystore-keytool "-genkeypair"
+                                         "-keyalg" "RSA"
+                                         "-keysize" keysize
+                                         "-validity" validity
+                                         "-alias" alias
+                                         "-keystore" keystore
+                                         "-storepass" storepass
+                                         "-storetype" (keystore--storetype-from-name keystore)
+                                         "-dname" dname)))
 
 (defun keystore--prompt-passwd-twice (prompt)
   (let (val1 val2)
@@ -345,6 +357,7 @@ TODO escape commas in the value, and unescape when parsing."
 (defun keystore--pkcs12? (keystore)
   (s-ends-with? ".p12" keystore t))
 
+;; TODO make customize variable
 (setq keystore-default-storetype "JKS")
 
 (defun keystore--storetype-from-name (keystore)
