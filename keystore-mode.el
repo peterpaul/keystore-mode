@@ -333,14 +333,14 @@ TODO escape commas in the value, and unescape when parsing."
     dname))
 
 (defun keystore--do-genkeypair (keystore storepass keysize validity alias dname)
-  (async-shell-command (keystore-command "keytool"
-                                         "-genkeypair"
-                                         "-keyalg" "RSA"
-                                         "-keysize" keysize
-                                         "-validity" (number-to-string validity)
-                                         "-alias" alias
-                                         (keystore--arg-keystore keystore storepass)
-                                         "-dname" (format "'%s'" dname))))
+  (shell-command (keystore-command "keytool"
+                                   "-genkeypair"
+                                   "-keyalg" "RSA"
+                                   "-keysize" keysize
+                                   "-validity" (number-to-string validity)
+                                   "-alias" alias
+                                   (keystore--arg-keystore keystore storepass)
+                                   "-dname" (format "'%s'" dname))))
 
 (defun keystore--prompt-passwd-twice (prompt)
   (let (val1 val2)
@@ -362,7 +362,8 @@ TODO escape commas in the value, and unescape when parsing."
          (read-number "Validity (Days): " 365)
          (read-string "Alias: ")
          (keystore-ask-dname)))
-  (keystore--do-genkeypair keystore storepass keysize validity alias dname))
+  (keystore--do-genkeypair keystore storepass keysize validity alias dname)
+  (list-keystore keystore storepass))
 
 (defun keystore--jks? (keystore)
   (s-ends-with? ".jks" keystore t))
@@ -415,7 +416,7 @@ Returns \"JKS\" or \"PKCS12\"."
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
   (tabulated-list-init-header))
 
-(defun list-keystore (file)
+(defun list-keystore (file &optional password)
   "Open keystore from FILE."
   (interactive "fKeystore File: ")
   (message "Opening keystore: '%s'" file)
@@ -425,7 +426,7 @@ Returns \"JKS\" or \"PKCS12\"."
       (make-local-variable 'keystore-filename)
       (setq keystore-filename file)
       (make-local-variable 'keystore-passphrase)
-      (setq keystore-passphrase nil)
+      (setq keystore-passphrase password)
       (keystore--read-entries-from-keystore)  
       (tabulated-list-print t)
       (switch-to-buffer file))))
