@@ -255,6 +255,21 @@ The CSR is saved in CERT-FILE."
                                      "-file" cert-file
                                      (keystore--arg-keystore keystore-filename keystore-passphrase)))))
 
+(defun keystore-gencert (pos csr-file)
+  "Generates a certificate as a response to certificate request CSR-FILE.
+
+The certificate is issues by the key entry at POS."
+  (interactive "p\nfCSR file: ")
+  (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
+         (target-buffer  "*cert.pem*"))
+    (async-shell-command (keystore-command "keytool"
+                                           "-gencert"
+                                           "-alias" alias
+                                           (keystore--arg-keystore keystore-filename keystore-passphrase)
+                                           "-infile" csr-file
+                                           "-rfc")
+                         target-buffer)))
+
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
 
@@ -413,6 +428,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "l" 'keystore-list)
     (define-key map "r" 'keystore-list-rfc)
     (define-key map "s" 'keystore-certreq)
+    (define-key map "S" 'keystore-gencert)
     (define-key map "v" 'keystore-list-verbose)
     map)
   "Local keymap for `keystore-mode' buffers.")
