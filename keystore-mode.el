@@ -243,16 +243,16 @@ the keystore argument becomes \"-srckeystore\"."
                                        "-destalias" destalias))))
   (keystore-render))
 
-(defun keystore-certreq (pos cert-file)
+(defun keystore-certreq (pos csr-file)
   "Generates a Certificate Signing Request (CSR) for the entry at POS.
 
-The CSR is saved in CERT-FILE."
-  (interactive "d\nfCSR target file: ")
+The CSR is saved in CSR-FILE."
+  (interactive "d\nfCSR output file: ")
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos))))
     (shell-command (keystore-command "keytool"
                                      "-certreq"
                                      "-alias" alias
-                                     "-file" cert-file
+                                     "-file" csr-file
                                      (keystore--arg-keystore keystore-filename keystore-passphrase)))))
 
 (defun keystore-gencert (pos csr-file)
