@@ -281,7 +281,8 @@ Returns the buffer containing the certificate."
       (shell-command (keystore-command "keytool"
                                        "-exportcert"
                                        (keystore--arg-keystore keystore-filename keystore-passphrase)
-                                       "-alias" alias)
+                                       "-alias" alias
+                                       "-rfc")
                      cert-buffer)
       cert-buffer)))
 
