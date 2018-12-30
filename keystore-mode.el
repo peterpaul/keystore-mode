@@ -142,9 +142,9 @@ the keystore argument becomes \"-srckeystore\"."
         (setq cmd (char-after))
         (unless (eq cmd ?\s)
           ;; This is the key KEYSTORE-ENTRY.
-          (setq keystore-entry (tabulated-list-get-id))
-          (cond ((eq cmd ?D)
-                 (push keystore-entry delete-list))))
+          (setq keystore-entry (tabulated-list-get-id (point)))
+          (pcase cmd
+            (?D (push keystore-entry delete-list))))
         (forward-line)))
     (when (y-or-n-p (format "Are you sure you want to delete: %s?" (mapcar #'keystore--get-alias delete-list)))
       (dolist (entry-id delete-list)
@@ -231,7 +231,7 @@ the keystore argument becomes \"-srckeystore\"."
   "Move an existing keystore entry from the line at POS to DESTALIAS."
   (interactive "d\nsDestination alias: ")
   (save-excursion
-    (let* ((alias (keystore--get-alias (tabulated-list-get-id)))
+    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
            (keystore-pass (read-passwd (format "Enter keystore passphrase to change alias '%s' to '%s' in '%s': "
                                                alias
                                                destalias
@@ -261,7 +261,7 @@ The CSR is saved in CERT-FILE."
 Returns the buffer containing the certificate."
   (interactive "d")
   (save-excursion
-    (let* ((alias (keystore--get-alias (tabulated-list-get-id)))
+    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
            (cert-buffer (get-buffer-create (format "%s.pem" alias))))
       (shell-command (keystore-command "keytool"
                                        "-exportcert"
@@ -273,7 +273,7 @@ Returns the buffer containing the certificate."
 (defun keystore-printcert (pos)
   (interactive "d")
   (let* ((pem-buffer (keystore-exportcert pos))
-         (alias (keystore--get-alias (tabulated-list-get-id)))
+         (alias (keystore--get-alias (tabulated-list-get-id pos)))
          (target-buffer (get-buffer-create (format "*printcert: %s*" alias))))
     (with-current-buffer target-buffer
       (keystore-details-mode)
