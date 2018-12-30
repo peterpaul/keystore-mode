@@ -33,6 +33,8 @@ The mode defines the following keybindings:
 | =I=  | keystore-importkeystore     | Import a full keystore from file usig =keytool -importkeystore=       |
 | =l=  | keystore-list               | Open new buffer with output of =keytool -list=                        |
 | =r=  | keystore-list-rfc           | Open new buffer with output of =keytool -list -rfc=                   |
+| =s=  | keystore-certreq            | Generate a CSR file for key under point with =keytool -certreq=       |
+| =S=  | keystore-gencert            | Generate a certificate for CSR file with =keytool -gencert=           |
 | =v=  | keystore-list-verbose       | Open new buffer with output of =keytool -list -v=                     |
 | =q=  | kill-this-buffer            | Kill the buffer and any local variables                               |
 

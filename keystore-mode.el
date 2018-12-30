@@ -417,7 +417,6 @@ Returns \"JKS\" or \"PKCS12\"."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "d" 'keystore-toggle-mark-delete)
-    (define-key map "q" 'kill-this-buffer)
     (define-key map "x" 'keystore-execute)
     (define-key map "c" 'keystore-changealias)
     (define-key map "e" 'keystore-exportcert)
@@ -430,6 +429,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "s" 'keystore-certreq)
     (define-key map "S" 'keystore-gencert)
     (define-key map "v" 'keystore-list-verbose)
+    (define-key map "q" 'kill-this-buffer)
     map)
   "Local keymap for `keystore-mode' buffers.")
 
