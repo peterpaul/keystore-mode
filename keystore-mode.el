@@ -261,14 +261,14 @@ The CSR is saved in CSR-FILE."
 The certificate is issues by the key entry at POS."
   (interactive "p\nfCSR file: ")
   (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-         (target-buffer  "*cert.pem*"))
-    (async-shell-command (keystore-command "keytool"
-                                           "-gencert"
-                                           "-alias" alias
-                                           (keystore--arg-keystore keystore-filename keystore-passphrase)
-                                           "-infile" csr-file
-                                           "-rfc")
-                         target-buffer)))
+         (cert-file (format "%s.pem" csr-file)))
+    (shell-command (keystore-command "keytool"
+                                     "-gencert"
+                                     "-alias" alias
+                                     (keystore--arg-keystore keystore-filename keystore-passphrase)
+                                     "-infile" csr-file
+                                     "-outfile" cert-file
+                                     "-rfc"))))
 
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
