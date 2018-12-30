@@ -243,6 +243,18 @@ the keystore argument becomes \"-srckeystore\"."
                                        "-destalias" destalias))))
   (keystore-render))
 
+(defun keystore-certreq (pos cert-file)
+  "Generates a Certificate Signing Request (CSR) for the entry at POS.
+
+The CSR is saved in CERT-FILE."
+  (interactive "d\nfCSR target file: ")
+  (let ((alias (keystore--get-alias (tabulated-list-get-id pos))))
+    (shell-command (keystore-command "keytool"
+                                     "-certreq"
+                                     "-alias" alias
+                                     "-file" cert-file
+                                     (keystore--arg-keystore keystore-filename keystore-passphrase)))))
+
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
 
@@ -400,6 +412,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "I" 'keystore-importkeystore)
     (define-key map "l" 'keystore-list)
     (define-key map "r" 'keystore-list-rfc)
+    (define-key map "s" 'keystore-certreq)
     (define-key map "v" 'keystore-list-verbose)
     map)
   "Local keymap for `keystore-mode' buffers.")
