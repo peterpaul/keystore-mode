@@ -1,6 +1,10 @@
 (source gnu)
 (source melpa)
 
-(package-file "keytool-mode.el")
+(package-file "keystore-mode.el")
 
 (depends-on "origami")
+
+(development
+ (depends-on "ecukes")
+ (depends-on "espuds"))

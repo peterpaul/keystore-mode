@@ -41,6 +41,8 @@
 
 (require 'origami)
 (require 's)
+(require 'seq)
+(require 'map)
 
 (setq keystore-details-syntax-keywords
       '(
