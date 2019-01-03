@@ -253,7 +253,7 @@ The CSR is saved in CSR-FILE."
                                      "-certreq"
                                      "-alias" alias
                                      "-file" csr-file
-                                     (keystore--arg-keystore keystore-filename keystore-passphrase)))))
+                                     (keystore--arg-keystore keystore-filename (keystore-get-passphrase-lazy))))))
 
 (defun keystore-gencert (pos csr-file)
   "Generates a certificate as a response to certificate request CSR-FILE.
@@ -265,7 +265,7 @@ The certificate is issues by the key entry at POS."
     (shell-command (keystore-command "keytool"
                                      "-gencert"
                                      "-alias" alias
-                                     (keystore--arg-keystore keystore-filename keystore-passphrase)
+                                     (keystore--arg-keystore keystore-filename (keystore-get-passphrase-lazy))
                                      "-infile" csr-file
                                      "-outfile" cert-file
                                      "-rfc"))))
@@ -280,7 +280,7 @@ Returns the buffer containing the certificate."
            (cert-buffer (get-buffer-create (format "%s.pem" alias))))
       (shell-command (keystore-command "keytool"
                                        "-exportcert"
-                                       (keystore--arg-keystore keystore-filename keystore-passphrase)
+                                       (keystore--arg-keystore keystore-filename (keystore-get-passphrase-lazy))
                                        "-alias" alias
                                        "-rfc")
                      cert-buffer)
