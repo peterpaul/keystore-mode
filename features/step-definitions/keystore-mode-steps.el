@@ -5,6 +5,8 @@
 
 (Given "^I create a new keystore \"\\(.+\\)\" with subject \"\\(.+\\)\" and password \"\\(.+\\)\""
        (lambda (keystore-file dname keystore-password)
+         (when (file-exists-p keystore-file)
+           (delete-file keystore-file))
          (keystore--do-genkeypair keystore-file keystore-password "1024" 365 "root" dname)))
 
 (When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
