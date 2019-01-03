@@ -459,7 +459,8 @@ Returns \"JKS\" or \"PKCS12\"."
       (setq keystore-passphrase password)
       (keystore--read-entries-from-keystore)  
       (tabulated-list-print t)
-      (switch-to-buffer file))))
+      )
+    (switch-to-buffer buf)))
 
 (provide 'keystore-mode)
 
