@@ -4,7 +4,10 @@ Feature: Keystore Mode
   I want to do something
 
   Scenario: Create a keystore
+    Given I create a new keystore "/tmp/keystore.jks" with subject "CN=me, C=US"
+    Then I should be in buffer "/tmp/keystore.jks"
+
+  Scenario: Opening an existing keystore
     Given I create a new keystore "/tmp/keystore.jks" with subject "CN=me, C=US" and password "insecure"
     When I open keystore "/tmp/keystore.jks" with password "insecure"
     Then I should be in buffer "/tmp/keystore.jks"
-
