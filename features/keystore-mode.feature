@@ -4,10 +4,23 @@ Feature: Keystore Mode
   I want to do something
 
   Scenario: Create a keystore
-    Given I create a new keystore "/tmp/keystore.jks" with subject "CN=me, C=US"
+    Given keystore "/tmp/keystore.jks" does not exist
+    When I create a keypair with alias "root" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
     Then I should be in buffer "/tmp/keystore.jks"
+    And I should see pattern:
+      """
+      PrivateKeyEntry[ ]+root
+      """
 
   Scenario: Opening an existing keystore
-    Given I create a new keystore "/tmp/keystore.jks" with subject "CN=me, C=US" and password "insecure"
+    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
     When I open keystore "/tmp/keystore.jks" with password "insecure"
     Then I should be in buffer "/tmp/keystore.jks"
+    And I should see pattern:
+      """
+      .+PrivateKeyEntry[ ]+ca
+      .+PrivateKeyEntry[ ]+root
+      """

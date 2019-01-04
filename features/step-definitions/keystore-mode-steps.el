@@ -3,17 +3,26 @@
 ;; files in this directory whose names end with "-steps.el" will be
 ;; loaded automatically by Ecukes.
 
-(Given "^I create a new keystore \"\\(.+\\)\" with subject \"\\(.+\\)\" and password \"\\(.+\\)\""
-       (lambda (keystore-file dname keystore-password)
+(Given "^keystore \"\\(.+\\)\" does not exist"
+       (lambda (keystore-file)
          (when (file-exists-p keystore-file)
-           (delete-file keystore-file))
-         (keystore--do-genkeypair keystore-file keystore-password "1024" 365 "root" dname)))
+           (delete-file keystore-file))))
 
-(Given "^I create a new keystore \"\\(.+\\)\" with subject \"\\(.+\\)\""
-       (lambda (keystore-file dname)
+(Given "^keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:"
+       (lambda (keystore-file keystore-password keys)
          (when (file-exists-p keystore-file)
            (delete-file keystore-file))
-         (keystore-genkeypair keystore-file "insecure" "1024" 365 "root" dname)))
+         (let* ((table keys)
+                (header (car table))
+                (rows (cdr table)))
+           (dolist (row rows)
+             (let ((alias (car row))
+                   (subject (cadr row)))
+               (keystore--do-genkeypair keystore-file keystore-password "1024" 365 alias subject))))))
+
+(When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
+      (lambda (alias subject keystore-file keystore-password)
+        (keystore-genkeypair keystore-file keystore-password "1024" 365 alias subject)))
 
 (When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
       (lambda (keystore-file keystore-password)
