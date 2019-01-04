@@ -21,7 +21,7 @@ env:
   - EMACS_VERSION=26.1
   - EMACS_VERSION=snapshot
 before_install:
-  - sudo apt-get install -y default-jre
+  - sudo apt-get install -y default-jre gnutls-bin
   # Configure $PATH: Executables are installed to $HOME/bin
   - export PATH="$HOME/bin:$PATH"
   # Download the makefile to emacs-travis.mk
