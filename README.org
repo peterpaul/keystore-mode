@@ -1,6 +1,10 @@
 #+TITLE: Keystore Mode
 #+OPTIONS: toc:2
 
+#+CAPTION: Travis build status
+#+NAME:    fig:travis-status
+[[https://api.travis-ci.com/peterpaul/keystore-mode.png?branch=master][https://travis-ci.com/peterpaul/keystore-mode]]
+
 A major mode for viewing and managing (java) keystores in Emacs.
 
 * Prerequisites

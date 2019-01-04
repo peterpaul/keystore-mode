@@ -22,6 +22,7 @@ env:
   - EMACS_VERSION=26.1
   - EMACS_VERSION=snapshot
 before_install:
+  - sudo apt-get install -y default-jre
   # Configure $PATH: Executables are installed to $HOME/bin
   - export PATH="$HOME/bin:$PATH"
   # Download the makefile to emacs-travis.mk
@@ -31,7 +32,6 @@ before_install:
   - make -f emacs-travis.mk install_cask
   # Install Texinfo, if you need to build info manuals for your project
   - make -f emacs-travis.mk install_texinfo
-  - apt-get install -y default-jre
 install:
   # Install your dependencies
   - cask install
