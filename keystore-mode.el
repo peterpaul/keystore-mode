@@ -43,37 +43,27 @@
 (require 'keystore-details-mode)
 
 (defun keystore-get-passphrase-lazy ()
-  "Get keystore passphrase and remember for next time."
+  "Get the keystore passphrase lazily.
+
+This function checks the (buffer local) variable `keystore-passphrase' for the presence of a
+passphrase. When the passphrase is not defined, the user is prompted to enter it, and the
+passphrase is stored in `keystore-passphrase'.
+
+Returns the value of `keystore-passphrase'."
   (when (not keystore-passphrase)
     (setq keystore-passphrase
           (read-passwd (format "Enter keystore passphrase of '%s': " keystore-filename))))
   keystore-passphrase)
 
-(defun keystore--record-of-size-5 (record)
-  (eq 5 (length record)))
-
 (defun keystore--prepare-record (record)
+  "Takes a keystore entry RECORD as parsed from the output of 'keytool -list', and transforms
+it to a table row for the tabulated-list."
   (let* ((alias (nth 0 record))
          (type (nth 3 record))
          (fingerprint-field (nth 4 record))
          (fingerprint (s-replace ":" ""
                                  (substring fingerprint-field (+ 2 (s-index-of ": " fingerprint-field))))))
     (vector fingerprint type alias)))
-
-(defun keystore--parse-keystore ()
-  (let* ((out)
-         (entry-index 0)
-         (keystore-info (keystore--do-list keystore-filename (keystore-get-passphrase-lazy) ""))
-         (keystore-entries
-          (split-string (s-replace ", \n" ", " keystore-info)
-                        "[\n\r]+" t)))
-    (dolist (entry keystore-entries out)
-      (let ((record (split-string entry "," nil " \t")))
-        (when (keystore--record-of-size-5 record)
-          (progn
-            (setq entry-index (+ 1 entry-index))
-            (setq out (cons (list (number-to-string entry-index) (keystore--prepare-record record))
-                            out))))))))
 
 (defun keystore--flatten-list (list)
   "Flatten LIST."
@@ -103,7 +93,7 @@ the keystore argument becomes \"-srckeystore\"."
           (format "-%sstoretype" option-prefix) (or storetype
                                                    (keystore--storetype-from-name keystore)))))
 
-(defun keystore--do-list (keystore-filename keystore-password style)
+(defun keystore--do-list (keystore-filename keystore-password &optional style)
   (shell-command-to-string
    (keystore-command "keytool"
                      "-list"
@@ -111,8 +101,21 @@ the keystore argument becomes \"-srckeystore\"."
                      style)))
 
 (defun keystore--read-entries-from-keystore ()
-  "Recompute tabulated-list-entries."
-  (setq tabulated-list-entries (keystore--parse-keystore)))
+  "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
+  (setq tabulated-list-entries
+        (let* ((out)
+               (entry-index 0)
+               (keystore-info (keystore--do-list keystore-filename (keystore-get-passphrase-lazy)))
+               (keystore-entries
+                (split-string (s-replace ", \n" ", " keystore-info)
+                              "[\n\r]+" t)))
+          (dolist (entry keystore-entries out)
+            (let ((record (split-string entry "," nil " \t")))
+              (when (eq (length record) 5)
+                (progn
+                  (setq entry-index (+ 1 entry-index))
+                  (setq out (cons (list (number-to-string entry-index) (keystore--prepare-record record))
+                                  out)))))))))
 
 (defun keystore-toggle-mark-delete (&optional _num)
   "Mark a keystore entry for deletion and move to the next line."
@@ -148,11 +151,11 @@ the keystore argument becomes \"-srckeystore\"."
         (forward-line)))
     (when (y-or-n-p (format "Are you sure you want to delete: %s?" (mapcar #'keystore--get-alias delete-list)))
       (dolist (entry-id delete-list)
-        (message "Deleting: '%s'" (keystore--get-alias entry-id))
+        ;; (message "Deleting: '%s'" (keystore--get-alias entry-id))
         (keystore--do-delete keystore-filename (keystore-get-passphrase-lazy) (keystore--get-alias entry-id)))
       (keystore-render))))
 
-(defun keystore-list-style (style)
+(defun keystore-list-style (&optional style)
   "Invoke `keytool -list' command with STYLE."
   (when keystore-filename
     (let ((inhibit-read-only t)
@@ -175,7 +178,7 @@ the keystore argument becomes \"-srckeystore\"."
 (defun keystore-list ()
   "Invoke `keytool -list'."
   (interactive)
-  (keystore-list-style ""))
+  (keystore-list-style))
 
 (defun keystore-list-verbose ()
   "Invoke `keytool -list -v'."
@@ -449,7 +452,7 @@ Returns \"JKS\" or \"PKCS12\"."
 (defun list-keystore (file &optional password)
   "Open keystore from FILE."
   (interactive "fKeystore File: ")
-  (message "Opening keystore: '%s'" file)
+  ;; (message "Opening keystore: '%s'" file)
   (let ((buf (get-buffer-create file)))
     (with-current-buffer buf
       (keystore-mode)
@@ -457,9 +460,8 @@ Returns \"JKS\" or \"PKCS12\"."
       (setq keystore-filename file)
       (make-local-variable 'keystore-passphrase)
       (setq keystore-passphrase password)
-      (keystore--read-entries-from-keystore)  
-      (tabulated-list-print t)
-      )
+      (keystore--read-entries-from-keystore)
+      (tabulated-list-print t))
     (switch-to-buffer buf)))
 
 (provide 'keystore-mode)

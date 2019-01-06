@@ -84,6 +84,7 @@ sudo update-locale LC_ALL=en_US.UTF-8
 
 - [ ] Add support for =openssl= and make it a more generic/versatile keystore/certificate management tool.
 - [ ] Backup the keystore before making changes to it.
+- [ ] Detect incorrect entered keystore passwords, and re-prompt the user.
 
 * Development
 
