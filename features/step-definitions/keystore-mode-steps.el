@@ -3,22 +3,29 @@
 ;; files in this directory whose names end with "-steps.el" will be
 ;; loaded automatically by Ecukes.
 
-(Given "^keystore \"\\(.+\\)\" does not exist"
-       (lambda (keystore-file)
-         (when (file-exists-p keystore-file)
-           (delete-file keystore-file))))
+(defun keystore-steps-delete-file-if-exists (file)
+  "Delete FILE if it exists."
+  (when (file-exists-p file)
+    (delete-file file)))
+
+(defun keystore-steps-generate-keypairs-from-table (keystore-file keystore-password keys)
+  "Execute 'keytool -genkeypair' on KEYSTORE-FILE with KEYSTORE-PASSWORD for KEYS.
+
+KEYS is a table with two columns: 'alias' and 'subject'."
+  (let* ((table keys)
+         (header (car table))
+         (rows (cdr table)))
+    (dolist (row rows)
+      (let ((alias (car row))
+            (subject (cadr row)))
+        (keystore--do-genkeypair keystore-file keystore-password "1024" 365 alias subject)))))
+
+(Given "^keystore \"\\(.+\\)\" does not exist" 'keystore-steps-delete-file-if-exists)
 
 (Given "^keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:"
        (lambda (keystore-file keystore-password keys)
-         (when (file-exists-p keystore-file)
-           (delete-file keystore-file))
-         (let* ((table keys)
-                (header (car table))
-                (rows (cdr table)))
-           (dolist (row rows)
-             (let ((alias (car row))
-                   (subject (cadr row)))
-               (keystore--do-genkeypair keystore-file keystore-password "1024" 365 alias subject))))))
+         (keystore-steps-delete-file-if-exists keystore-file)
+         (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)))
 
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
       (lambda (alias subject keystore-file keystore-password)
