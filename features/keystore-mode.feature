@@ -64,6 +64,24 @@ Feature: Keystore Mode
       [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
+  Scenario: Unmarking a keystore entry for deletion
+    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    And I open keystore "/tmp/keystore.jks" with password "insecure"
+    When I place the cursor before "root"
+    And I press "d"
+    And I place the cursor before "ca"
+    And I press "d"
+    And I place the cursor before "root"
+    And I press "d"
+    Then I should see pattern:
+      """
+      [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      """
+
   Scenario: Deleting a keystore entry
     Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
