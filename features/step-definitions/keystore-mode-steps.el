@@ -38,3 +38,17 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 (When "^I switch to buffer \"\\(.+\\)\""
       (lambda (buffer) (let ((buf (get-buffer buffer)))
                     (switch-to-buffer buf))))
+
+(Then "^buffer \"\\(.+\\)\" should exist"
+      (lambda (buffer)
+        (let ((message "Expected buffer '%s' to exist, but all I got was %s"))
+          (cl-assert (get-buffer buffer) nil message buffer (buffer-list)))))
+
+(Then "^buffer \"\\(.+\\)\" should contain\\(?: \"\\(.+\\)\"\\|:\\)$"
+      (lambda (buffer expected)
+        (Then (format "buffer \"%s\" should exist" buffer))
+        (let ((actual (save-excursion
+                        (switch-to-buffer (get-buffer buffer))
+                        (buffer-string)))
+              (message "Expected\n%s\nto be part of:\n%s"))
+          (cl-assert (s-contains? expected actual) nil message expected actual))))

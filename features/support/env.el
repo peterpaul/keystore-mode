@@ -1,4 +1,5 @@
 (require 'f)
+(require 'cl)
 
 (defvar keystore-mode-support-path
   (f-dirname load-file-name))

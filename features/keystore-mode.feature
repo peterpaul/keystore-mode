@@ -98,3 +98,17 @@ Feature: Keystore Mode
       """
       .+PrivateKeyEntry[ ]+ca
       """
+
+  Scenario: Printing a certificate
+    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    And I open keystore "/tmp/keystore.jks" with password "insecure"
+    When I place the cursor before "ca"
+    And I press "p"
+    Then buffer "*printcert: ca*" should contain:
+      """
+      Owner: CN=ca, C=US
+      Issuer: CN=ca, C=US
+      """
