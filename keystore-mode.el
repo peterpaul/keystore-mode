@@ -45,9 +45,9 @@
 (defun keystore-get-passphrase-lazy ()
   "Get the keystore passphrase lazily.
 
-This function checks the (buffer local) variable `keystore-passphrase' for the presence of a
-passphrase. When the passphrase is not defined, the user is prompted to enter it, and the
-passphrase is stored in `keystore-passphrase'.
+This function checks the (buffer local) variable `keystore-passphrase' for the
+presence of a passphrase.  When the passphrase is not defined, the user is
+prompted to enter it, and the passphrase is stored in `keystore-passphrase'.
 
 Returns the value of `keystore-passphrase'."
   (when (not keystore-passphrase)
@@ -56,8 +56,10 @@ Returns the value of `keystore-passphrase'."
   keystore-passphrase)
 
 (defun keystore--prepare-record (record)
-  "Takes a keystore entry RECORD as parsed from the output of 'keytool -list', and transforms
-it to a table row for the tabulated-list."
+  "Convert RECORD to a table row for `tabulated-list'.
+
+Takes a keystore entry RECORD as parsed from the output of 'keytool -list', and
+transforms it to a table row for the tabulated-list."
   (let* ((alias (nth 0 record))
          (type (nth 3 record))
          (fingerprint-field (nth 4 record))
@@ -81,12 +83,12 @@ it to a table row for the tabulated-list."
              " "))
 
 (defun keystore--arg-keystore (keystore storepass &optional storetype prefix)
-  "Create a list with \"-keystore\", \"-storepass\" and \"-storetype\" arguments.
+  "Create a list with `-keystore', `-storepass' and `-storetype' arguments.
 
 When STORETYPE is not passed, the type is determined from the KEYSTORE filename.
 
-When PREFIX is set, add this as a prefix to the option names, e.g. with \"src\"
-the keystore argument becomes \"-srckeystore\"."
+When PREFIX is set, add this as a prefix to the option names, e.g. with `src'
+the keystore argument becomes `-srckeystore'."
   (let ((option-prefix (or prefix "")))
     (list (format "-%skeystore" option-prefix) keystore
           (format "-%sstorepass" option-prefix) storepass
@@ -94,6 +96,10 @@ the keystore argument becomes \"-srckeystore\"."
                                                    (keystore--storetype-from-name keystore)))))
 
 (defun keystore--do-list (keystore-filename keystore-password &optional style)
+  "Execute 'keytool -list' for KEYSTORE-FILENAME with KEYSTORE-PASSWORD.
+
+You can pass an optional STYLE, which can actually be any parameter that
+keytool accepts, but is typically either `-rfc' or `-v'."
   (shell-command-to-string
    (keystore-command "keytool"
                      "-list"
@@ -148,7 +154,7 @@ the keystore argument becomes \"-srckeystore\"."
           (pcase cmd
             (?D (push keystore-entry delete-list))))
         (forward-line)))
-    (when (y-or-n-p (format "Are you sure you want to delete: %s?" (mapcar #'keystore--get-alias delete-list)))
+    (when (y-or-n-p (format "Are you sure you want to delete: %s? " (mapcar #'keystore--get-alias delete-list)))
       (dolist (entry-id delete-list)
         ;; (message "Deleting: '%s'" (keystore--get-alias entry-id))
         (keystore--do-delete keystore-filename (keystore-get-passphrase-lazy) (keystore--get-alias entry-id)))
@@ -192,31 +198,31 @@ the keystore argument becomes \"-srckeystore\"."
 (defun keystore-importcert-buffer (cert-buffer cert-alias)
   "Import certificate from CERT-BUFFER with alias CERT-ALIAS."
   (interactive "bBuffer with certificate to import: \nsSet alias for certificate: ")
-  (let ((keystore-file keystore-filename)
-        (keystore-pass (read-passwd (format "Enter keystore passphrase to import certificate from '%s' to '%s': "
-                                            cert-buffer
-                                            keystore-filename))))
-    (save-excursion
-      (set-buffer cert-buffer)
-      (shell-command-on-region (point-min)
-                               (point-max)
-                               (keystore-command "keytool"
-                                                 "-importcert"
-                                                 (keystore--arg-keystore keystore-file keystore-pass)
-                                                 "-alias" cert-alias
-                                                 "-noprompt"))))
-  (keystore-render))
+  (when (y-or-n-p (format "Are you sure you want to import '%s' with alias '%s'? "
+                          cert-buffer
+                          cert-alias))
+    (let ((keystore-file keystore-filename)
+          (keystore-pass (keystore-get-passphrase-lazy)))
+      (save-excursion
+        (set-buffer cert-buffer)
+        (shell-command-on-region (point-min)
+                                 (point-max)
+                                 (keystore-command "keytool"
+                                                   "-importcert"
+                                                   (keystore--arg-keystore keystore-file keystore-pass)
+                                                   "-alias" cert-alias
+                                                   "-noprompt"))))
+    (keystore-render)))
 
 (defun keystore-importcert-file (cert-file cert-alias)
   "Import certificate from CERT-FILE with alias CERT-ALIAS."
   (interactive "fFile with certificate to import: \nsSet alias for certificate: ")
-  (let ((keystore-file keystore-filename)
-        (keystore-pass (read-passwd (format "Enter keystore passphrase to import certificate from '%s' to '%s': "
-                                            cert-file
-                                            keystore-filename))))
+  (when (y-or-n-p (format "Are you sure you want to import '%s' with alias '%s'? "
+                          cert-file
+                          cert-alias))
     (shell-command (keystore-command "keytool"
                                      "-importcert"
-                                     (keystore--arg-keystore keystore-file keystore-pass)
+                                     (keystore--arg-keystore keystore-filename (keystore-get-passphrase-lazy))
                                      "-alias" cert-alias
                                      "-file" cert-file
                                      "-noprompt")))
@@ -232,21 +238,21 @@ the keystore argument becomes \"-srckeystore\"."
 (defun keystore-changealias (pos destalias)
   "Move an existing keystore entry from the line at POS to DESTALIAS."
   (interactive "d\nsDestination alias: ")
+  
   (save-excursion
-    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-           (keystore-pass (read-passwd (format "Enter keystore passphrase to change alias '%s' to '%s' in '%s': "
-                                               alias
-                                               destalias
-                                               keystore-filename))))
-      (shell-command (keystore-command "keytool"
-                                       "-changealias"
-                                       (keystore--arg-keystore keystore-filename keystore-pass)
-                                       "-alias" alias
-                                       "-destalias" destalias))))
-  (keystore-render))
+    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos))))
+      (when (y-or-n-p (format "Are you sure you want to change alias '%s' to '%s'? "
+                              alias
+                              destalias))
+        (shell-command (keystore-command "keytool"
+                                         "-changealias"
+                                         (keystore--arg-keystore keystore-filename (keystore-get-passphrase-lazy))
+                                         "-alias" alias
+                                         "-destalias" destalias))
+        (keystore-render)))))
 
 (defun keystore-certreq (pos csr-file)
-  "Generates a Certificate Signing Request (CSR) for the entry at POS.
+  "Generate a Certificate Signing Request (CSR) for the entry at POS.
 
 The CSR is saved in CSR-FILE."
   (interactive "d\nfCSR output file: ")
@@ -329,10 +335,11 @@ Returns the buffer containing the certificate."
 (defun keystore--dname-prompt-element (keyname prompt &optional previous-result)
   "Prompt the user to enter a dname element value.
 
-Returns a string with the dname element, including the KEYNAME, like \"CN=<value>\",
-or nil if the user entered a blank string.
+Returns a string with the dname element, including the KEYNAME, like
+\"CN=<value>\", or nil if the user entered a blank string.
 
-If previous-result is not nil, then the default value is parsed from the previous result.
+If previous-result is not nil, then the default value is parsed from the
+previous result.
 
 TODO escape commas in the value, and unescape when parsing."
   (let* ((default-value (and previous-result
@@ -346,11 +353,11 @@ TODO escape commas in the value, and unescape when parsing."
       (format "%s=%s" keyname value))))
 
 (defun keystore-ask-dname ()
-  "Ask the user for dname entries and returns a dname"
+  "Ask the user for dname entries and return a dname."
   (interactive)
   (let (common-name organization-unit organization-name locality-name state-name country dname dname-elements)
     (while (not (and dname
-                 (y-or-n-p (format "Do you accept: '%s'?" dname))))
+                 (y-or-n-p (format "Do you accept: '%s'? " dname))))
       (setq dname-elements (list
                             (setq common-name (keystore--dname-prompt-element "CN" "Common Name: " common-name))
                             (setq organization-unit (keystore--dname-prompt-element "OU" "Organization Unit: " organization-unit))
@@ -379,12 +386,19 @@ TODO escape commas in the value, and unescape when parsing."
       (setq val1 (read-passwd prompt))
       (setq val2 (read-passwd (format "Repeat %s" prompt)))
       (when (not (string-equal val1 val2))
-        (when (not (y-or-n-p "The two provided values do not match, retry?"))
+        (when (not (y-or-n-p "The two provided values do not match, retry? "))
           (error "The two provided values do not match"))))
     val1))
 
 (defun keystore-genkeypair (keystore storepass keysize validity alias dname)
-  ""
+  ".
+
+Argument KEYSTORE The keystore file that will contain the generated key pair.
+Argument STOREPASS The password for the target keystore.
+Argument KEYSIZE The size of the generated (RSA) key.
+Argument VALIDITY The validity period of the certificate in days, starting now.
+Argument ALIAS The alias by which the keypair is stored in the keystore.
+Argument DNAME The subject distinguished name of the (self-signed) certificate."
   (interactive
    (list (read-file-name "Keystore File: ")
          (keystore--prompt-passwd-twice "Keystore Passphrase: ")
@@ -449,7 +463,8 @@ Returns \"JKS\" or \"PKCS12\"."
   (tabulated-list-init-header))
 
 (defun list-keystore (file &optional password)
-  "Open keystore from FILE."
+  "Open keystore from FILE.
+Optional argument PASSWORD The password of KEYSTORE."
   (interactive "fKeystore File: ")
   ;; (message "Opening keystore: '%s'" file)
   (let ((buf (get-buffer-create file)))
