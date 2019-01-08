@@ -112,10 +112,9 @@ the keystore argument becomes \"-srckeystore\"."
           (dolist (entry keystore-entries out)
             (let ((record (split-string entry "," nil " \t")))
               (when (eq (length record) 5)
-                (progn
-                  (setq entry-index (+ 1 entry-index))
-                  (setq out (cons (list (number-to-string entry-index) (keystore--prepare-record record))
-                                  out)))))))))
+                (setq entry-index (+ 1 entry-index))
+                (setq out (cons (list (number-to-string entry-index) (keystore--prepare-record record))
+                                out))))))))
 
 (defun keystore-toggle-mark-delete (&optional _num)
   "Mark a keystore entry for deletion and move to the next line."
