@@ -44,7 +44,6 @@
 
 (defun keystore-get-passphrase-lazy ()
   "Get the keystore passphrase lazily.
-
 This function checks the (buffer local) variable `keystore-passphrase' for the
 presence of a passphrase.  When the passphrase is not defined, the user is
 prompted to enter it, and the passphrase is stored in `keystore-passphrase'.
@@ -57,7 +56,6 @@ Returns the value of `keystore-passphrase'."
 
 (defun keystore--prepare-record (record)
   "Convert RECORD to a table row for `tabulated-list'.
-
 Takes a keystore entry RECORD as parsed from the output of 'keytool -list', and
 transforms it to a table row for the tabulated-list."
   (let* ((alias (nth 0 record))
@@ -76,7 +74,14 @@ transforms it to a table row for the tabulated-list."
                  list)))
 
 (defun keystore-command (command &rest args)
-  "Create commandline for COMMAND with ARGS."
+  "Create commandline for COMMAND with ARGS.
+Note that all lists in ARGS are flattened. I.e.
+
+ (keystore-command \"keytool\" \"-list\" '(\"-keystore\" \"/tmp/keystore.jks\"))
+
+will return
+
+ \"keytool -list -keystore /tmp/keystore.jks\""
   (mapconcat 'identity
              (cons command
                    (keystore--flatten-list args))
@@ -84,7 +89,6 @@ transforms it to a table row for the tabulated-list."
 
 (defun keystore--arg-keystore (keystore storepass &optional storetype prefix)
   "Create a list with `-keystore', `-storepass' and `-storetype' arguments.
-
 When STORETYPE is not passed, the type is determined from the KEYSTORE filename.
 
 When PREFIX is set, add this as a prefix to the option names, e.g. with `src'
@@ -97,7 +101,6 @@ the keystore argument becomes `-srckeystore'."
 
 (defun keystore--do-list (keystore-filename keystore-password &optional style)
   "Execute 'keytool -list' for KEYSTORE-FILENAME with KEYSTORE-PASSWORD.
-
 You can pass an optional STYLE, which can actually be any parameter that
 keytool accepts, but is typically either `-rfc' or `-v'."
   (shell-command-to-string
@@ -253,7 +256,6 @@ keytool accepts, but is typically either `-rfc' or `-v'."
 
 (defun keystore-certreq (pos csr-file)
   "Generate a Certificate Signing Request (CSR) for the entry at POS.
-
 The CSR is saved in CSR-FILE."
   (interactive "d\nfCSR output file: ")
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos))))
@@ -265,7 +267,6 @@ The CSR is saved in CSR-FILE."
 
 (defun keystore-gencert (pos csr-file)
   "Generates a certificate as a response to certificate request CSR-FILE.
-
 The certificate is issues by the key entry at POS."
   (interactive "p\nfCSR file: ")
   (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
@@ -280,7 +281,6 @@ The certificate is issues by the key entry at POS."
 
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
-
 Returns the buffer containing the certificate."
   (interactive "d")
   (save-excursion
@@ -334,7 +334,6 @@ Returns the buffer containing the certificate."
 
 (defun keystore--dname-prompt-element (keyname prompt &optional previous-result)
   "Prompt the user to enter a dname element value.
-
 Returns a string with the dname element, including the KEYNAME, like
 \"CN=<value>\", or nil if the user entered a blank string.
 
@@ -391,8 +390,7 @@ TODO escape commas in the value, and unescape when parsing."
     val1))
 
 (defun keystore-genkeypair (keystore storepass keysize validity alias dname)
-  ".
-
+  "Generate a self-signed keypair in KEYSTORE.
 Argument KEYSTORE The keystore file that will contain the generated key pair.
 Argument STOREPASS The password for the target keystore.
 Argument KEYSIZE The size of the generated (RSA) key.
@@ -420,7 +418,6 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
 
 (defun keystore--storetype-from-name (keystore)
   "Try to determine the keystore type from the KEYSTORE filename extension.
-
 When the type cannot be determined from the extension, this function returns
 `keystore-default-storetype'.
 
