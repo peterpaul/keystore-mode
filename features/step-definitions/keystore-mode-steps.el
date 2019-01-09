@@ -18,7 +18,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
     (dolist (row rows)
       (let ((alias (car row))
             (subject (cadr row)))
-        (keystore--do-genkeypair keystore-file keystore-password "1024" 365 alias subject)))))
+        (keystore--do-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))))
 
 (Given "^keystore \"\\(.+\\)\" does not exist" 'keystore-steps-delete-file-if-exists)
 
@@ -29,7 +29,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
       (lambda (alias subject keystore-file keystore-password)
-        (keystore-genkeypair keystore-file keystore-password "1024" 365 alias subject)))
+        (keystore-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))
 
 (When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
       (lambda (keystore-file keystore-password)
