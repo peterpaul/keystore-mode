@@ -37,6 +37,18 @@ Feature: Keystore Mode
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
+  Scenario: Adding a keypair to an opened keystore
+    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+    And I open keystore "/tmp/keystore.jks" with password "insecure"
+    When I create a keypair with alias "ca" and subject "CN=me, C=US"
+    Then I should see pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      """
+
   Scenario: Overwriting an existing keypair to an existing keystore
     Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |

@@ -430,7 +430,8 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
          (read-number "Validity (Days): " 365)
          (read-string "Alias: ")
          (keystore-ask-dname)))
-  (keystore--do-genkeypair buffer-file-name (keystore-get-passphrase-lazy) keyalg keysize validity alias dname))
+  (keystore--do-genkeypair buffer-file-name (keystore-get-passphrase-lazy) keyalg keysize validity alias dname)
+  (keystore-render))
 
 (defun keystore--jks? (keystore)
   "Return t when the string KEYSTORE ends with \".jks\", nil otherwise."

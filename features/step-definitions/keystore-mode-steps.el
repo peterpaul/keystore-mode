@@ -27,6 +27,10 @@ KEYS is a table with two columns: 'alias' and 'subject'."
          (keystore-steps-delete-file-if-exists keystore-file)
          (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)))
 
+(When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\""
+      (lambda (alias subject)
+        (keystore-list-genkeypair "RSA" "1024" 365 alias subject)))
+
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
       (lambda (alias subject keystore-file keystore-password)
         (keystore-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))
