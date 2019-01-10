@@ -382,9 +382,9 @@ asked whether he wants to try again."
               (not (string-equal val1 val2)))
       (setq val1 (read-passwd prompt))
       (setq val2 (read-passwd (format "Repeat %s" prompt)))
-      (when (not (string-equal val1 val2))
-        (when (not (y-or-n-p "The two provided values do not match, retry? "))
-          (error "The two provided values do not match"))))
+      (unless (or (string-equal val1 val2)
+                 (y-or-n-p "The two provided values do not match, retry? "))
+        (error "The two provided values do not match")))
     val1))
 
 (defun keystore--do-genkeypair (keystore storepass keyalg keysize validity alias dname)
