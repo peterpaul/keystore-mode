@@ -462,6 +462,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "x" 'keystore-execute)
     (define-key map "c" 'keystore-changealias)
     (define-key map "e" 'keystore-exportcert)
+    (define-key map "g" 'keystore-list-genkeypair)
     (define-key map "p" 'keystore-printcert)
     (define-key map "ib" 'keystore-importcert-buffer)
     (define-key map "if" 'keystore-importcert-file)
