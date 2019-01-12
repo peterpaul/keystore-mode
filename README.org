@@ -101,7 +101,7 @@ sudo update-locale LC_ALL=en_US.UTF-8
 
 * Development
 
-This repository provides a [[https://github.com/cask/cask][Cask]]file for development purposes.
+This repository provides a [[https://github.com/cask/cask][Caskfile]] for development purposes.
 
 Tests are created with [[https://github.com/ecukes/ecukes][ecukes]].
 The testsuite can be run with the following command:
