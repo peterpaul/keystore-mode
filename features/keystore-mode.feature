@@ -110,7 +110,6 @@ Feature: Keystore Mode
   Scenario: Printing a certificate
     Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
-      | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
     When I place the cursor before "ca"
     And I press "p"
@@ -123,7 +122,6 @@ Feature: Keystore Mode
   Scenario: Exporting a certificate
     Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
-      | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
     When I place the cursor before "ca"
     And I press "e"
