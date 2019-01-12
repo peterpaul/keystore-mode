@@ -7,6 +7,10 @@
 
 A major mode for viewing and managing (java) keystores in Emacs.
 
+#+CAPTION: Screenshot of list-keystore
+#+NAME:    fig:list-keystore
+[[../assets/list-keystore.png?raw=true]]
+
 * Prerequisites
 
 This mode uses the =keytool= command, which comes with OpenJDK JRE.
@@ -14,14 +18,22 @@ Make sure it is installed and available on the PATH.
 
 * Usage
 
-Open a keystore with =M-x list-keytool=. After selecting the keystore file, you're
-asked to enter the keystore password. This password is stored in a buffer local
-variable. It is recommended to kill the buffer (bound to =q=) directly after
-you're done with the keystore.
+There are several ways to open a buffer in =keystore-mode=.
 
-#+CAPTION: Screenshot of list-keystore
-#+NAME:    fig:list-keystore
-[[../assets/list-keystore.png?raw=true]]
+** Creating a new keystore
+
+Create a new keystore with =M-x keystore-genkeypair=. This command will prompt
+the user for certificate parameters. After the key and the certificate are
+generated, the keystore is displayed in a new buffer with =keystore-mode=.
+
+** Opening an existing keystore
+
+Open an existing keystore with =M-x list-keystore=. After selecting the keystore
+file, you're asked to enter the keystore password. This password is stored in a
+buffer local variable. It is recommended to kill the buffer (bound to =q=)
+directly after you're done with the keystore.
+
+* Key bindings
 
 The mode defines the following keybindings:
 
@@ -89,6 +101,9 @@ sudo update-locale LC_ALL=en_US.UTF-8
 
 * Development
 
+This repository provides a [[https://github.com/cask/cask][Cask]]file for development purposes.
+
+Tests are created with [[https://github.com/ecukes/ecukes][ecukes]].
 The testsuite can be run with the following command:
 
 #+CAPTION: Run tests
