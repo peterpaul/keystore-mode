@@ -38,10 +38,9 @@ Feature: Keystore Mode
       """
 
   Scenario: Adding a keypair to an opened keystore
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
-    And I open keystore "/tmp/keystore.jks" with password "insecure"
     When I create a keypair with alias "ca" and subject "CN=me, C=US"
     Then I should see pattern:
       """
@@ -61,11 +60,10 @@ Feature: Keystore Mode
       """
 
   Scenario: Marking a keystore entry for deletion
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
-    And I open keystore "/tmp/keystore.jks" with password "insecure"
     When I place the cursor before "ca"
     And I press "d"
     And I place the cursor before "root"
@@ -77,11 +75,10 @@ Feature: Keystore Mode
       """
 
   Scenario: Unmarking a keystore entry for deletion
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
-    And I open keystore "/tmp/keystore.jks" with password "insecure"
     When I place the cursor before "root"
     And I press "d"
     And I place the cursor before "ca"
@@ -95,11 +92,10 @@ Feature: Keystore Mode
       """
 
   Scenario: Deleting a keystore entry
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
-    And I open keystore "/tmp/keystore.jks" with password "insecure"
     When I place the cursor before "ca"
     And I start an action chain
     And I press "d"
@@ -112,11 +108,10 @@ Feature: Keystore Mode
       """
 
   Scenario: Printing a certificate
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
-    And I open keystore "/tmp/keystore.jks" with password "insecure"
     When I place the cursor before "ca"
     And I press "p"
     Then buffer "*printcert: ca*" should contain:

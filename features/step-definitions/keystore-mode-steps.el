@@ -20,30 +20,37 @@ KEYS is a table with two columns: 'alias' and 'subject'."
             (subject (cadr row)))
         (keystore--do-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))))
 
-(Given "^keystore \"\\(.+\\)\" does not exist" 'keystore-steps-delete-file-if-exists)
+(Given "^keystore \"\\(.+\\)\" does not exist$"
+       'keystore-steps-delete-file-if-exists)
 
-(Given "^keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:"
+(Given "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:$"
+       (lambda (keystore-file keystore-password keys)
+         (keystore-steps-delete-file-if-exists keystore-file)
+         (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)
+         (list-keystore keystore-file keystore-password)))
+
+(Given "^keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:$"
        (lambda (keystore-file keystore-password keys)
          (keystore-steps-delete-file-if-exists keystore-file)
          (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)))
 
-(When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\""
+(When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\"$"
       (lambda (alias subject)
         (keystore-genkeypair-list "RSA" "1024" 365 alias subject)))
 
-(When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
+(When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\"$"
       (lambda (alias subject keystore-file keystore-password)
         (keystore-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))
 
-(When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
+(When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\"$"
       (lambda (keystore-file keystore-password)
         (list-keystore keystore-file keystore-password)))
 
-(When "^I switch to buffer \"\\(.+\\)\""
+(When "^I switch to buffer \"\\(.+\\)\"$"
       (lambda (buffer) (let ((buf (get-buffer buffer)))
                     (switch-to-buffer buf))))
 
-(Then "^buffer \"\\(.+\\)\" should exist"
+(Then "^buffer \"\\(.+\\)\" should exist$"
       (lambda (buffer)
         (let ((message "Expected buffer '%s' to exist, but all I got was %s"))
           (cl-assert (get-buffer buffer) nil message buffer (buffer-list)))))
