@@ -417,7 +417,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
   (keystore--do-genkeypair keystore storepass keyalg keysize validity alias dname)
   (list-keystore keystore storepass))
 
-(defun keystore-list-genkeypair (keyalg keysize validity alias dname)
+(defun keystore-genkeypair-list (keyalg keysize validity alias dname)
   "Generate a self-signed keypair in the current keystore.
 Argument KEYALG The key algorithm.
 Argument KEYSIZE The size of the generated key.
@@ -462,7 +462,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "x" 'keystore-execute)
     (define-key map "c" 'keystore-changealias)
     (define-key map "e" 'keystore-exportcert)
-    (define-key map "g" 'keystore-list-genkeypair)
+    (define-key map "g" 'keystore-genkeypair-list)
     (define-key map "p" 'keystore-printcert)
     (define-key map "ib" 'keystore-importcert-buffer)
     (define-key map "if" 'keystore-importcert-file)

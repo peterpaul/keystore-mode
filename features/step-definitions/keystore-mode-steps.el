@@ -29,7 +29,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\""
       (lambda (alias subject)
-        (keystore-list-genkeypair "RSA" "1024" 365 alias subject)))
+        (keystore-genkeypair-list "RSA" "1024" 365 alias subject)))
 
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\""
       (lambda (alias subject keystore-file keystore-password)
