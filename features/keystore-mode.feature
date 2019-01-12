@@ -13,11 +13,10 @@ Feature: Keystore Mode
       """
 
   Scenario: Opening an existing keystore
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
-    When I open keystore "/tmp/keystore.jks" with password "insecure"
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
       """
