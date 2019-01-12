@@ -119,3 +119,15 @@ Feature: Keystore Mode
       Owner: CN=ca, C=US
       Issuer: CN=ca, C=US
       """
+
+  Scenario: Exporting a certificate
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    When I place the cursor before "ca"
+    And I press "e"
+    Then buffer "ca.pem" should contain pattern:
+      """
+      -----BEGIN CERTIFICATE-----
+      """

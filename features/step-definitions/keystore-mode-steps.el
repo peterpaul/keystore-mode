@@ -63,3 +63,13 @@ KEYS is a table with two columns: 'alias' and 'subject'."
                         (buffer-string)))
               (message "Expected\n%s\nto be part of:\n%s"))
           (cl-assert (s-contains? expected actual) nil message expected actual))))
+
+(Then "^buffer \"\\(.+\\)\" should contain pattern\\(?: \"\\(.+\\)\"\\|:\\)$"
+      (lambda (buffer expected)
+        (Then (format "buffer \"%s\" should exist" buffer))
+        (let ((actual (save-excursion
+                        (switch-to-buffer (get-buffer buffer))
+                        (buffer-string)))
+              (message "Expected to see pattern '%s' in '%s', but did not."))
+          (cl-assert
+           (s-matches? expected actual) nil message expected actual))))
