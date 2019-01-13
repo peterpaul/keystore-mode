@@ -5,6 +5,7 @@ Feature: Keystore Mode
 
   Scenario: Creating a keypair in a new keystore
     Given keystore "/tmp/keystore.jks" does not exist
+    And buffer "/tmp/keystore.jks" does not exist
     When I create a keypair with alias "root" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
@@ -13,7 +14,8 @@ Feature: Keystore Mode
       """
 
   Scenario: Opening an existing keystore
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given buffer "/tmp/keystore.jks" does not exist
+    And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
@@ -25,7 +27,8 @@ Feature: Keystore Mode
       """
 
   Scenario: Adding a keypair to an existing keystore
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given buffer "/tmp/keystore.jks" does not exist
+    And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
     When I create a keypair with alias "ca" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
@@ -48,7 +51,8 @@ Feature: Keystore Mode
       """
 
   Scenario: Overwriting an existing keypair to an existing keystore
-    Given keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    Given buffer "/tmp/keystore.jks" does not exist
+    And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
     When I create a keypair with alias "root" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
@@ -110,6 +114,7 @@ Feature: Keystore Mode
     Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | ca    | CN=ca, C=US   |
+    And buffer "*printcert: ca" does not exist
     When I place the cursor before "ca"
     And I press "p"
     Then buffer "*printcert: ca*" should contain:
@@ -122,6 +127,7 @@ Feature: Keystore Mode
     Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | ca    | CN=ca, C=US   |
+    And buffer "ca.pem" does not exist
     When I place the cursor before "ca"
     And I press "e"
     Then buffer "ca.pem" should contain pattern:

@@ -55,7 +55,10 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 (Then "^buffer \"\\(.+\\)\" should exist$"
       (lambda (buffer)
         (let ((message "Expected buffer '%s' to exist, but all I got was %s"))
-          (cl-assert (get-buffer buffer) nil message buffer (buffer-list)))))
+          (cl-assert (get-buffer buffer) nil message buffer
+                     (mapconcat (lambda (x) (format "'%s'" x))
+                                (buffer-list)
+                                ", ")))))
 
 (Then "^buffer \"\\(.+\\)\" should contain\\(?: \"\\(.+\\)\"\\|:\\)$"
       (lambda (buffer expected)
