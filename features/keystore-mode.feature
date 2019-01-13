@@ -152,3 +152,57 @@ Feature: Keystore Mode
       ca, .+, PrivateKeyEntry,[ ]
       Certificate fingerprint (.+): .+
       """
+
+  Scenario: Listing the contents of a keystore
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    And buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+    When I place the cursor before "ca"
+    And I press "v"
+    Then I should see:
+      """
+      Your keystore contains 2 entries
+      """
+    And I should see:
+      """
+      Alias name: root
+      """
+    And I should see:
+      """
+      Alias name: ca
+      """
+    And I should see:
+      """
+      Entry type: PrivateKeyEntry
+      Certificate chain length: 1
+      Certificate[1]:
+      Owner: CN=root, C=US
+      Issuer: CN=root, C=US
+      """
+
+  Scenario: Listing the contents of a keystore
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    And buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+    When I place the cursor before "ca"
+    And I press "r"
+    Then I should see:
+      """
+      Your keystore contains 2 entries
+      """
+    And I should see:
+      """
+      Alias name: root
+      """
+    And I should see:
+      """
+      Alias name: ca
+      """
+    And I should see:
+      """
+      -----BEGIN CERTIFICATE-----
+      """
