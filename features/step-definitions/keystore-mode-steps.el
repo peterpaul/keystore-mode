@@ -20,6 +20,11 @@ KEYS is a table with two columns: 'alias' and 'subject'."
          (when (file-exists-p file)
            (delete-file file))))
 
+(Given "^buffer \"\\(.+\\)\" does not exist$"
+       (lambda (buffer)
+         (let ((buf (get-buffer buffer)))
+           (when buf (kill-buffer buf)))))
+
 (Given "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:$"
        (lambda (keystore-file keystore-password keys)
          (Given (format "keystore \"%s\" does not exist" keystore-file))

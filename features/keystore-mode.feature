@@ -128,3 +128,21 @@ Feature: Keystore Mode
       """
       -----BEGIN CERTIFICATE-----
       """
+
+  Scenario: Listing the contents of a keystore
+    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    And buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+    When I place the cursor before "ca"
+    And I press "l"
+    Then buffer "*Keystore details: /tmp/keystore.jks*" should contain pattern:
+      """
+      Your keystore contains 2 entries
+
+      root, .+, PrivateKeyEntry,[ ]
+      Certificate fingerprint (.+): .+
+      ca, .+, PrivateKeyEntry,[ ]
+      Certificate fingerprint (.+): .+
+      """
