@@ -10,6 +10,17 @@
 (defvar keystore-mode-root-path
   (f-parent keystore-mode-features-path))
 
+(defvar keystore-mode-yes-or-no
+  't
+  "Stub value to return from `yes-or-no-p' and `y-or-n-p'.")
+
+(defun keystore-mode-y-or-n-p (prompt)
+  keystore-mode-yes-or-no)
+
+(defalias 'yes-or-no-p 'keystore-mode-y-or-n-p)
+
+(defalias 'y-or-n-p 'keystore-mode-y-or-n-p)
+
 (add-to-list 'load-path keystore-mode-root-path)
 
 ;; Ensure that we don't load old byte-compiled versions

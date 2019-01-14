@@ -36,6 +36,13 @@ KEYS is a table with two columns: 'alias' and 'subject'."
          (Given (format "keystore \"%s\" does not exist" keystore-file))
          (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)))
 
+(Given "^buffer \"\\(.+\\)\" with contents\\(?: \"\\(.+\\)\"\\|:\\)$"
+       (lambda (buffer contents)
+         (let ((buf (get-buffer-create buffer)))
+           (with-current-buffer buf
+             (erase-buffer)
+             (insert contents)))))
+
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\"$"
       (lambda (alias subject)
         (keystore-genkeypair-list "RSA" "1024" 365 alias subject)))
@@ -51,6 +58,10 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 (When "^I switch to buffer \"\\(.+\\)\"$"
       (lambda (buffer) (let ((buf (get-buffer buffer)))
                     (switch-to-buffer buf))))
+
+(When "^I import certificate \"\\(.+\\)\" from buffer \"\\(.+\\)\"$"
+      (lambda (alias buffer)
+        (keystore-importcert-buffer buffer alias)))
 
 (Then "^buffer \"\\(.+\\)\" should exist$"
       (lambda (buffer)
