@@ -23,9 +23,13 @@
 
 (add-to-list 'load-path keystore-mode-root-path)
 
+(when (require 'undercover nil t)
+  (undercover "*.el"))
+
 ;; Ensure that we don't load old byte-compiled versions
 (let ((load-prefer-newer t))
   (require 'keystore-mode)
+  (require 'keystore-details-mode)
   (require 'espuds)
   (require 'ert))
 
