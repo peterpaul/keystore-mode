@@ -1,12 +1,13 @@
 #+TITLE: Keystore Mode
 #+OPTIONS: toc:2
 
-#+CAPTION: Travis build status
-#+NAME:    fig:travis-status
-[[https://api.travis-ci.com/peterpaul/keystore-mode.png?branch=master]]
-
 #+BEGIN_HTML
-<a href='https://coveralls.io/github/peterpaul/keystore-mode?branch=master'><img src='https://coveralls.io/repos/github/peterpaul/keystore-mode/badge.svg?branch=master' alt='Coverage Status' /></a>
+<a href='https://travis-ci.com/peterpaul/keystore-mode'>
+<img src='https://travis-ci.com/peterpaul/keystore-mode.svg?branch=master' alt='Build Status' />
+</a>
+<a href='https://coveralls.io/github/peterpaul/keystore-mode?branch=master'>
+<img src='https://coveralls.io/repos/github/peterpaul/keystore-mode/badge.svg?branch=master' alt='Coverage Status' />
+</a>
 #+END_HTML
 
 A major mode for viewing and managing (java) keystores in Emacs.
