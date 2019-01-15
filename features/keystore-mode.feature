@@ -239,9 +239,51 @@ Feature: Keystore Mode
     And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
-    When I import certificate "test" from buffer "*test certificate*"
+    When I import certificate "test-buffer" from buffer "*test certificate*"
     Then buffer "/tmp/keystore.jks" should contain pattern:
       """
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
-      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
+      """
+
+  Scenario: Importing a certificate from a file
+    Given file "/tmp/cert.pem" with contents:
+      """
+      -----BEGIN CERTIFICATE-----
+      MIIE1zCCAr+gAwIBAgIEPbNE1jANBgkqhkiG9w0BAQwFADAcMQswCQYDVQQGEwJV
+      UzENMAsGA1UEAxMEdGVzdDAeFw0xOTAxMTMyMDU0MDhaFw0yMDAxMTMyMDU0MDha
+      MBwxCzAJBgNVBAYTAlVTMQ0wCwYDVQQDEwR0ZXN0MIICIjANBgkqhkiG9w0BAQEF
+      AAOCAg8AMIICCgKCAgEAnJFK+tRPL2GgWoRFlmBZLPwj9NPWvYyFuY5Jb2K/ub2x
+      cWX1ncMy7JAS4hoa54vsSR3H+aio9aTvNvWVaqKfOQ+hnS/G9vW1gQfOn0D8n4Lj
+      0XfVeLg0xjE0oR/2g2S/Su4vw/9Nl0T+bu5t76sTumRGJCFAxbIzACLQm0u7QrHU
+      MDsZhMiCVx7l1jWwxijkmspbq3U6iSKoaeHyEL0SXDpLM4YtqjuFxyNv1+NMjg5+
+      fgGbh/QAt/FWzFAz2dJHCZaorXSk0u4H7EN9jtI1MBBEHM8tKqZ4nUOriFWvowUI
+      hc4Zy7Ts/a9mjmemGSK6j/2PmKJ6KgPollti14tHz6QXSXn/GU1sBEYeGJ4Z9t3+
+      rqMaW21BdCi1oiX/e2i/WOSy7mR9iPy/2grY6YtI/cT+EAYMulQ6W3tUV5C5zvbR
+      r5R5MsOtGTNJ6d/CW3TQ16/qxO+0r3n/VxXKoD1IH7IfU08YymvSBsXA7h9nxyU4
+      YW2pRqQO2fRsx94fbnghfe/4WcXx6M5D4483pJvKlCByELkKoZfrAo7XS+j5nMBu
+      BGhemgnlrLXUMHjkibvc6cVoP7G0HIo9HzS9jxsjYRbtp+O2LFgeI6ppPhP+m9Kr
+      E1PaAISzKzYZAgu9bTN48m+7dbBBD2P1yuV9LR9DvPwaJhu9wyEgRzgb4cE4GXEC
+      AwEAAaMhMB8wHQYDVR0OBBYEFK63zl54Su95U/FYsTZvqjPHdDstMA0GCSqGSIb3
+      DQEBDAUAA4ICAQAxpKMIc6IQyvBOt85A5hh2YmSdf/rpBL8/TwlSDOchQSndqQZK
+      b61scNkTJitDCFHEJnCLYd9yi0B2DAQ3B14kkpIvM2ZxdDF/Qb9pBMBZZL2TdtPg
+      BsQNGmJ7K3cR5kK4441Vi4MakxXENbIHu6dzp1qEfjs1/hIFME5bcl4geoTw26kj
+      WizUMH7rkLXmGTyVaVvFm1/Gusk6/mNVAeZdVfO7hVF7Om03o3sEH9H6B8XIO9Ru
+      y9XUDbYix8pk11uNJ4ZkcsPZFV7AdDKkPIUBHYE6ASUFJCRRBVCnqUnbMAMoJ+z4
+      CRLqK4ZYI39JDqp347+23D5ajV4mcRBVVWi2lnnvDQmmaHGeftdqLZlNkS37jT7b
+      wdJuusA+5zEUQBSCSjytxgw1k6/ELZaEFw3W6hX6w+xZmJFTd9KNL9qOC+GXMgKZ
+      vqd3NBP2Svu9TWqAOjwPz68QOAvdYrgG6vLG350ou4eV+SKU2MWTjPsnWOE3oRyc
+      UxC+wzObAotnI4jpKUF+dWbV/hinlZ7Ymi8JjtwniZn6rGPTy31xnaK2t982Oe8Z
+      SBZwuobAjBF7rW55izQadoKbRAixzLl2eu7WX31Ngt3zRE1bhl8UKBmWjpu92/2q
+      UTqFVKH6fSWT1wtfqzhZ1BNDbvkxXc23VR/vb61GfFWSYnRUbKjTTDk71A==
+      -----END CERTIFICATE-----
+      """
+    And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+    When I import certificate "test-file" from file "/tmp/cert.pem"
+    Then buffer "/tmp/keystore.jks" should contain pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
       """
