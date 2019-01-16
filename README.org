@@ -9,7 +9,7 @@
 <img src='https://coveralls.io/repos/github/peterpaul/keystore-mode/badge.svg?branch=master' alt='Coverage Status' />
 </a>
 <a href='https://opensource.org/licenses/MIT'>
-<img src='https://img.shields.io/badge/License-MIT-green.svg' alt='License: MIT' />
+<img src='https://img.shields.io/github/license/peterpaul/keystore-mode.svg' alt='License: MIT' />
 </a>
 #+END_HTML
 
