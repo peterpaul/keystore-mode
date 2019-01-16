@@ -259,3 +259,18 @@ Feature: Keystore Mode
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
       """
+
+  Scenario: Changing an alias
+    When I place the cursor before "ca2"
+    And I start an action chain
+    And I press "c"
+    And I type "intermediate"
+    And I press "RET"
+    And I execute the action chain
+    Then buffer "/tmp/keystore.jks" should contain pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+intermediate
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
+      """
