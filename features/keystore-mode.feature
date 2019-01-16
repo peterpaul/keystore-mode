@@ -284,3 +284,19 @@ Feature: Keystore Mode
     And I press "RET"
     And I execute the action chain
     Then file "/tmp/intermediate.csr" should exist
+
+  Scenario: Creating a certificate
+    Given I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "root"
+    And I start an action chain
+    And I press "s"
+    And I type "/tmp/intermediate.csr"
+    And I press "RET"
+    And I execute the action chain
+    Then buffer "/tmp/keystore.jks" should contain pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+intermediate
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
+      """
