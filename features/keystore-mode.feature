@@ -274,3 +274,13 @@ Feature: Keystore Mode
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
       """
+
+  Scenario: Generating a CSR
+    Given I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "intermediate"
+    And I start an action chain
+    And I press "s"
+    And I type "/tmp/intermediate.csr"
+    And I press "RET"
+    And I execute the action chain
+    Then file "/tmp/intermediate.csr" should exist

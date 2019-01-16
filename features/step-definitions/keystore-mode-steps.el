@@ -89,6 +89,11 @@ KEYS is a table with two columns: 'alias' and 'subject'."
                                 (buffer-list)
                                 ", ")))))
 
+(Then "^file \"\\(.+\\)\" should exist$"
+      (lambda (file)
+        (let ((message "Expected file '%s' to exist, but it did not"))
+          (cl-assert (file-exists-p file) nil message buffer))))
+
 (Then "^buffer \"\\(.+\\)\" should contain\\(?: \"\\(.+\\)\"\\|:\\)$"
       (lambda (buffer expected)
         (Then (format "buffer \"%s\" should exist" buffer))
