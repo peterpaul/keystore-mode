@@ -3,16 +3,6 @@ Feature: Keystore Mode
   As a user
   I want to manage the contents in emacs
 
-  Scenario: Creating a keypair in a new keystore
-    Given keystore "/tmp/keystore.jks" does not exist
-    And buffer "/tmp/keystore.jks" does not exist
-    When I create a keypair with alias "root" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
-    Then I should be in buffer "/tmp/keystore.jks"
-    And I should see pattern:
-      """
-      PrivateKeyEntry[ ]+root
-      """
-
   Scenario: Opening an existing keystore
     Given buffer "/tmp/keystore.jks" does not exist
     And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
@@ -26,137 +16,123 @@ Feature: Keystore Mode
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
-  Scenario: Adding a keypair to an existing keystore
-    Given buffer "/tmp/keystore.jks" does not exist
-    And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-    When I create a keypair with alias "ca" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
+  Scenario: Creating a keypair in a new keystore
+    Given file "/tmp/keystore.jks" does not exist
+    And buffer "/tmp/keystore.jks" does not exist
+    When I create a keypair with alias "root" and subject "CN=root, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
       """
-      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
+      PrivateKeyEntry[ ]+root
+      """
+
+  Scenario: Adding a keypair to an existing keystore
+    Given buffer "/tmp/keystore.jks" does not exist
+    When I create a keypair with alias "ca1" and subject "CN=ca1, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
+    Then I should be in buffer "/tmp/keystore.jks"
+    And I should see pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
   Scenario: Adding a keypair to an opened keystore
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-    When I create a keypair with alias "ca" and subject "CN=me, C=US"
+    When I create a keypair with alias "ca2" and subject "CN=ca2, C=US"
     Then I should see pattern:
       """
-      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
   Scenario: Overwriting an existing keypair to an existing keystore
-    Given buffer "/tmp/keystore.jks" does not exist
-    And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-    When I create a keypair with alias "root" and subject "CN=me, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
-    Then I should be in buffer "/tmp/keystore.jks"
+    When I create a keypair with alias "root" and subject "CN=root, C=US"
     And I should see pattern:
       """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
   Scenario: Marking a keystore entry for deletion
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-      | ca    | CN=ca, C=US   |
-    When I place the cursor before "ca"
+    When I place the cursor before "ca1"
     And I press "d"
     And I place the cursor before "root"
     And I press "d"
     Then I should see pattern:
       """
-      [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
+      [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
       [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
   Scenario: Unmarking a keystore entry for deletion
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-      | ca    | CN=ca, C=US   |
     When I place the cursor before "root"
-    And I press "d"
-    And I place the cursor before "ca"
-    And I press "d"
-    And I place the cursor before "root"
     And I press "d"
     Then I should see pattern:
       """
-      [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
+      [D][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
   Scenario: Deleting a keystore entry
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-      | ca    | CN=ca, C=US   |
-    When I place the cursor before "ca"
-    And I press "d"
-    And I press "x"
+    When I press "x"
     Then I should not see pattern:
       """
-      .+PrivateKeyEntry[ ]+ca
+      .+PrivateKeyEntry[ ]+ca1
+      """
+    And I should see pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       """
 
   Scenario: Printing a certificate
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | ca    | CN=ca, C=US   |
-    And buffer "*printcert: ca" does not exist
-    When I place the cursor before "ca"
+    Given buffer "*printcert: ca" does not exist
+    And I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "ca2"
     And I press "p"
-    Then buffer "*printcert: ca*" should contain:
+    Then buffer "*printcert: ca2*" should contain:
       """
-      Owner: CN=ca, C=US
-      Issuer: CN=ca, C=US
+      Owner: CN=ca2, C=US
+      Issuer: CN=ca2, C=US
       """
 
   Scenario: Exporting a certificate
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | ca    | CN=ca, C=US   |
-    And buffer "ca.pem" does not exist
-    When I place the cursor before "ca"
+    Given buffer "ca2.pem" does not exist
+    And I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "ca2"
     And I press "e"
-    Then buffer "ca.pem" should contain pattern:
+    Then buffer "ca2.pem" should contain pattern:
       """
       -----BEGIN CERTIFICATE-----
       """
 
   Scenario: Listing the contents of a keystore
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-      | ca    | CN=ca, C=US   |
-    And buffer "*Keystore details: /tmp/keystore.jks*" does not exist
-    When I place the cursor before "ca"
+    Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+    And I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "ca2"
     And I press "l"
-    Then buffer "*Keystore details: /tmp/keystore.jks*" should contain pattern:
+    Then I should see:
       """
       Your keystore contains 2 entries
-
+      """
+    And I should see pattern:
+      """
       root, .+, PrivateKeyEntry,[ ]
       Certificate fingerprint (.+): .+
-      ca, .+, PrivateKeyEntry,[ ]
+      """
+    And I should see pattern:
+      """
+      ca2, .+, PrivateKeyEntry,[ ]
       Certificate fingerprint (.+): .+
       """
 
-  Scenario: Listing the contents of a keystore
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-      | ca    | CN=ca, C=US   |
-    And buffer "*Keystore details: /tmp/keystore.jks*" does not exist
-    When I place the cursor before "ca"
+  Scenario: Listing the contents of a keystore verbose
+    Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+    And I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "ca2"
     And I press "v"
     Then I should see:
       """
@@ -168,7 +144,7 @@ Feature: Keystore Mode
       """
     And I should see:
       """
-      Alias name: ca
+      Alias name: ca2
       """
     And I should see:
       """
@@ -179,13 +155,10 @@ Feature: Keystore Mode
       Issuer: CN=root, C=US
       """
 
-  Scenario: Listing the contents of a keystore
-    Given I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
-      | ca    | CN=ca, C=US   |
-    And buffer "*Keystore details: /tmp/keystore.jks*" does not exist
-    When I place the cursor before "ca"
+  Scenario: Listing the contents of a keystore with pems
+    Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+    And I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "ca2"
     And I press "r"
     Then I should see:
       """
@@ -197,7 +170,7 @@ Feature: Keystore Mode
       """
     And I should see:
       """
-      Alias name: ca
+      Alias name: ca2
       """
     And I should see:
       """
@@ -236,12 +209,11 @@ Feature: Keystore Mode
       UTqFVKH6fSWT1wtfqzhZ1BNDbvkxXc23VR/vb61GfFWSYnRUbKjTTDk71A==
       -----END CERTIFICATE-----
       """
-    And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
+    And I am in buffer "/tmp/keystore.jks"
     When I import certificate "test-buffer" from buffer "*test certificate*"
     Then buffer "/tmp/keystore.jks" should contain pattern:
       """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       """
@@ -278,12 +250,12 @@ Feature: Keystore Mode
       UTqFVKH6fSWT1wtfqzhZ1BNDbvkxXc23VR/vb61GfFWSYnRUbKjTTDk71A==
       -----END CERTIFICATE-----
       """
-    And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
-      | alias | subject       |
-      | root  | CN=root, C=US |
+    And I am in buffer "/tmp/keystore.jks"
     When I import certificate "test-file" from file "/tmp/cert.pem"
     Then buffer "/tmp/keystore.jks" should contain pattern:
       """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
       """

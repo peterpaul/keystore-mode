@@ -15,7 +15,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
             (subject (cadr row)))
         (keystore--do-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))))
 
-(Given "^keystore \"\\(.+\\)\" does not exist$"
+(Given "^file \"\\(.+\\)\" does not exist$"
        (lambda (file)
          (when (file-exists-p file)
            (delete-file file))))
@@ -27,13 +27,13 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 
 (Given "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:$"
        (lambda (keystore-file keystore-password keys)
-         (Given (format "keystore \"%s\" does not exist" keystore-file))
+         (Given (format "file \"%s\" does not exist" keystore-file))
          (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)
          (list-keystore keystore-file keystore-password)))
 
 (Given "^keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:$"
        (lambda (keystore-file keystore-password keys)
-         (Given (format "keystore \"%s\" does not exist" keystore-file))
+         (Given (format "file \"%s\" does not exist" keystore-file))
          (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)))
 
 (Given "^buffer \"\\(.+\\)\" with contents\\(?: \"\\(.+\\)\"\\|:\\)$"
@@ -52,6 +52,11 @@ KEYS is a table with two columns: 'alias' and 'subject'."
              (write-file file)
              (kill-buffer buf)))))
 
+(Given "^I am in buffer \"\\(.+\\)\"$"
+       (lambda (buffer)
+         (let ((buf (get-buffer buffer)))
+           (switch-to-buffer buf))))
+
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\"$"
       (lambda (alias subject)
         (keystore-genkeypair-list "RSA" "1024" 365 alias subject)))
@@ -65,8 +70,8 @@ KEYS is a table with two columns: 'alias' and 'subject'."
         (list-keystore keystore-file keystore-password)))
 
 (When "^I switch to buffer \"\\(.+\\)\"$"
-      (lambda (buffer) (let ((buf (get-buffer buffer)))
-                    (switch-to-buffer buf))))
+      (lambda (buffer)
+        (Given (format "I am in buffer \"%s\"" buffer))))
 
 (When "^I import certificate \"\\(.+\\)\" from buffer \"\\(.+\\)\"$"
       (lambda (alias buffer)
