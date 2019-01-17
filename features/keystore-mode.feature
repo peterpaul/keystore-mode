@@ -112,8 +112,7 @@ Feature: Keystore Mode
   Scenario: Listing the contents of a keystore
     Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
     And I am in buffer "/tmp/keystore.jks"
-    When I place the cursor before "ca2"
-    And I press "l"
+    When I press "l"
     Then I should see:
       """
       Your keystore contains 2 entries
@@ -132,8 +131,7 @@ Feature: Keystore Mode
   Scenario: Listing the contents of a keystore verbose
     Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
     And I am in buffer "/tmp/keystore.jks"
-    When I place the cursor before "ca2"
-    And I press "v"
+    When I press "v"
     Then I should see:
       """
       Your keystore contains 2 entries
@@ -158,8 +156,7 @@ Feature: Keystore Mode
   Scenario: Listing the contents of a keystore with pems
     Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
     And I am in buffer "/tmp/keystore.jks"
-    When I place the cursor before "ca2"
-    And I press "r"
+    When I press "r"
     Then I should see:
       """
       Your keystore contains 2 entries
@@ -289,10 +286,11 @@ Feature: Keystore Mode
     Given I am in buffer "/tmp/keystore.jks"
     When I place the cursor before "root"
     And I start an action chain
-    And I press "s"
+    And I press "S"
     And I type "/tmp/intermediate.csr"
     And I press "RET"
     And I execute the action chain
+    And I press "v"
     Then buffer "/tmp/keystore.jks" should contain pattern:
       """
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+intermediate
