@@ -29,6 +29,24 @@ Feature: Keystore Mode
   Scenario: Adding a keypair to an existing keystore
     Given buffer "/tmp/keystore.jks" does not exist
     When I create a keypair with alias "ca1" and subject "CN=ca1, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
+    When I start an action chain
+    When I press "G"
+    When I type "1024"
+    When I press "RET"
+    When I type "365"
+    When I press "RET"
+    When I type "ca1"
+    When I press "RET"
+    When I type "ca1"
+    When I press "RET"    
+    When I press "RET"    
+    When I press "RET"    
+    When I press "RET"    
+    When I press "RET"    
+    When I type "US"
+    When I press "RET"
+    When I press "y"
+    And I execute the action chain    
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
       """
