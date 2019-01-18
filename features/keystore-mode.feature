@@ -89,7 +89,7 @@ Feature: Keystore Mode
       """
 
   Scenario: Printing a certificate
-    Given buffer "*printcert: ca" does not exist
+    Given buffer "*printcert: ca2" does not exist
     And I am in buffer "/tmp/keystore.jks"
     When I place the cursor before "ca2"
     And I press "p"
@@ -98,6 +98,9 @@ Feature: Keystore Mode
       Owner: CN=ca2, C=US
       Issuer: CN=ca2, C=US
       """
+
+  Scenario: Clean printcert
+    Given buffer "*printcert: ca2*" does not exist
 
   Scenario: Exporting a certificate
     Given buffer "ca2.pem" does not exist
@@ -108,6 +111,9 @@ Feature: Keystore Mode
       """
       -----BEGIN CERTIFICATE-----
       """
+
+  Scenario: Clean certificate buffer
+    Given buffer "ca2.pem" does not exist
 
   Scenario: Listing the contents of a keystore
     Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
@@ -174,6 +180,9 @@ Feature: Keystore Mode
       -----BEGIN CERTIFICATE-----
       """
 
+  Scenario: Cleanup keystore details buffer
+    Given buffer "*Keystore details: /tmp/keystore.jks*" does not exist
+
   Scenario: Importing a certificate from a buffer
     Given buffer "*test certificate*" with contents:
       """
@@ -214,6 +223,9 @@ Feature: Keystore Mode
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       """
+
+  Scenario: Cleaning test certificate buffer
+    Given buffer "*test certificate*" does not exist
 
   Scenario: Importing a certificate from a file
     Given file "/tmp/cert.pem" with contents:
@@ -290,11 +302,25 @@ Feature: Keystore Mode
     And I type "/tmp/intermediate.csr"
     And I press "RET"
     And I execute the action chain
-    And I press "v"
+    Then file "/tmp/intermediate.csr.pem" should exist    
+
+  Scenario: Importing the generated certificate
+    Given I am in buffer "/tmp/keystore.jks"
+    When I import certificate "intermediate" from file "/tmp/intermediate.csr.pem"
     Then buffer "/tmp/keystore.jks" should contain pattern:
       """
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+intermediate
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
+      """
+
+  Scenario: Validating the generated certificate
+    Given I am in buffer "/tmp/keystore.jks"
+    When I place the cursor before "intermediate"
+    And I press "p"
+    Then buffer "*printcert: intermediate*" should contain pattern:
+      """
+      Owner: CN=ca2, C=US
+      Issuer: CN=root, C=US
       """

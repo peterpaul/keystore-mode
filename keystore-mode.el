@@ -272,9 +272,9 @@ The CSR is saved in CSR-FILE."
 (defun keystore-gencert (pos csr-file)
   "Generates a certificate as a response to certificate request CSR-FILE.
 The certificate is issued by the key entry at POS."
-  (interactive "p\nfCSR file: ")
-  (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-         (cert-file (format "%s.pem" csr-file)))
+  (interactive "d\nfCSR file: ")
+  (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
+        (cert-file (format "%s.pem" csr-file)))
     (shell-command (keystore-command "keytool"
                                      "-gencert"
                                      "-alias" alias
