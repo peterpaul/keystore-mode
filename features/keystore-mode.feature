@@ -324,3 +324,20 @@ Feature: Keystore Mode
       Owner: CN=ca2, C=US
       Issuer: CN=root, C=US
       """
+
+  Scenario: Importing another keystore
+    Given buffer "/tmp/other-keystore.p12" does not exist
+    And I open keystore "/tmp/other-keystore.p12" with password "insecure" and these keys:
+      | alias | subject      |
+      | key   | CN=key, C=US |
+    And I am in buffer "/tmp/keystore.jks"
+    When I import keystore "/tmp/other-keystore.p12" with password "insecure"
+    When I start an action chain
+    Then buffer "/tmp/keystore.jks" should contain pattern:
+      """
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+intermediate
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+key
+      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
+      [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
+      """

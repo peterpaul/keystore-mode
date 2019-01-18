@@ -81,6 +81,10 @@ KEYS is a table with two columns: 'alias' and 'subject'."
       (lambda (alias file)
         (keystore-importcert-file file alias)))
 
+(When "^I import keystore \"\\([^\"]+\\)\" with password \"\\([^\"]+\\)\"$"
+      (lambda (srckeystore srcstorepass)
+        (keystore-importkeystore srckeystore srcstorepass)))
+
 (Then "^buffer \"\\(.+\\)\" should exist$"
       (lambda (buffer)
         (let ((message "Expected buffer '%s' to exist, but all I got was %s"))

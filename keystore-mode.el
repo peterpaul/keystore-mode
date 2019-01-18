@@ -319,16 +319,16 @@ Returns the buffer containing the certificate."
       (read-only-mode 1)
       (origami-close-all-nodes target-buffer))))
 
-(defun keystore-importkeystore (srckeystore)
+(defun keystore-importkeystore (srckeystore srcstorepass)
   "Import SRCKEYSTORE into this one."
-  (interactive "fKeystore to import: ")
-  (let ((srcstorepass (read-passwd (format "Enter keystore passphrase of '%s': " srckeystore)))
-        (deststorepass (read-passwd (format "Enter keystore passphrase of '%s': " buffer-file-name))))
-    (shell-command (keystore-command "keytool"
-                                     "-importkeystore"
-                                     (keystore--arg-keystore srckeystore srcstorepass nil "src")
-                                     (keystore--arg-keystore buffer-file-name deststorepass nil "dest")
-                                     "-noprompt")))
+  (interactive
+   (list (read-file-name "Keystore to import: ")
+         (read-passwd "Enter keystore passphrase")))
+  (shell-command (keystore-command "keytool"
+                                   "-importkeystore"
+                                   (keystore--arg-keystore srckeystore srcstorepass nil "src")
+                                   (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+                                   "-noprompt"))
   (keystore-render))
 
 (defun keystore--blank-string-p (str)
