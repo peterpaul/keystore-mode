@@ -7,7 +7,7 @@
 ;; URL: https://github.com/peterpaul/keystore-mode
 ;; Version: 0.0.1
 ;; Keywords: tools
-;; Package-Requires: ((origami "1.0") (s "1.12.0"))
+;; Package-Requires: ((emacs "24.3") (origami "1.0") (s "1.12.0"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -152,7 +152,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
   (goto-char (point-min)))
 
 (defun keystore-execute ()
-  "Execute marked changes (i.e. deletes)."
+  "Execute marked entries (i.e. deletes)."
   (interactive)
   (let (delete-list cmd keystore-entry)
     (save-excursion
@@ -270,8 +270,8 @@ The CSR is saved in CSR-FILE."
                                      (keystore--arg-keystore)))))
 
 (defun keystore-gencert (pos csr-file)
-  "Generates a certificate as a response to certificate request CSR-FILE.
-The certificate is issued by the key entry at POS."
+  "Issue a certificate by the key entry at POS as a response to the certificate
+request CSR-FILE."
   (interactive "d\nfCSR file: ")
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
         (cert-file (format "%s.pem" csr-file)))
@@ -320,7 +320,7 @@ Returns the buffer containing the certificate."
       (origami-close-all-nodes target-buffer))))
 
 (defun keystore-importkeystore (srckeystore srcstorepass)
-  "Import SRCKEYSTORE into this one."
+  "Import SRCKEYSTORE with password SRCSTOREPASS into this keys."
   (interactive
    (list (read-file-name "Keystore to import: ")
          (read-passwd "Enter keystore passphrase")))
@@ -334,11 +334,11 @@ Returns the buffer containing the certificate."
 (defun keystore--blank-string-p (str)
   "Return t if STR contains only whitespace, is empty or is nil."
   (if str
-      (string-equal (s-replace-regexp "^[[:space:]]+" "" str) "")
+      (s-matches? "^[[:space:]]*$" str)
     't))
 
 (defun keystore--dname-prompt-element (keyname prompt &optional previous-result)
-  "Prompt the user to enter a dname element value.
+  "Prompt the user with PROMPT to enter a value for dname element KEYNAME.
 Returns a string with the dname element, including the KEYNAME, like
 \"CN=<value>\", or nil if the user entered a blank string.
 
@@ -388,6 +388,14 @@ asked whether he wants to try again."
     val1))
 
 (defun keystore--do-genkeypair (keystore storepass keyalg keysize validity alias dname)
+  "Generate a self-signed keypair in KEYSTORE.
+Argument KEYSTORE The keystore file that will contain the generated key pair.
+Argument STOREPASS The password for the target keystore.
+Argument KEYALG The key algorithm.
+Argument KEYSIZE The size of the generated key.
+Argument VALIDITY The validity period of the certificate in days, starting now.
+Argument ALIAS The alias by which the keypair is stored in the keystore.
+Argument DNAME The subject distinguished name of the (self-signed) certificate."
   (shell-command (keystore-command "keytool"
                                    "-genkeypair"
                                    "-keyalg" "RSA"
