@@ -45,7 +45,6 @@ Feature: Keystore Mode
     When I press "RET"    
     When I type "US"
     When I press "RET"
-    When I press "y"
     And I execute the action chain    
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
