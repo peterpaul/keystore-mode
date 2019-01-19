@@ -5,10 +5,19 @@ Feature: Keystore Mode
 
   Scenario: Opening an existing keystore
     Given buffer "/tmp/keystore.jks" does not exist
-    And I open keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+    And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
       | ca    | CN=ca, C=US   |
+    When I start an action chain
+    And I press "M-x"
+    And I type "list-keystore"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I execute the action chain
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
       """
