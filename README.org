@@ -101,11 +101,12 @@ Make sure that you've configured locales correctly on your system. For example f
 sudo update-locale LC_ALL=en_US.UTF-8
 #+END_SRC
 
-* Future ideas
+* Future ideas/TODOs
 
 - [ ] Add support for =openssl= and make it a more generic/versatile keystore/certificate management tool.
 - [ ] Backup the keystore before making changes to it.
 - [ ] Detect incorrect entered keystore passwords, and re-prompt the user.
+- [ ] Currently generated keys get the keystore password, allow setting other passwords on keys.
 
 * Development
 
