@@ -28,7 +28,31 @@ Feature: Keystore Mode
   Scenario: Creating a keypair in a new keystore
     Given file "/tmp/keystore.jks" does not exist
     And buffer "/tmp/keystore.jks" does not exist
-    When I create a keypair with alias "root" and subject "CN=root, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
+    When I start an action chain
+    And I press "M-x"
+    And I type "keystore-genkeypair"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I type "1024"
+    And I press "RET"
+    And I type "365"
+    And I press "RET"
+    And I type "root"
+    And I press "RET"
+    And I type "root"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I type "US"
+    And I press "RET"
+    And I execute the action chain
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
       """
@@ -38,22 +62,22 @@ Feature: Keystore Mode
   Scenario: Adding a keypair to an existing keystore
     Given buffer "/tmp/keystore.jks" does not exist
     When I create a keypair with alias "ca1" and subject "CN=ca1, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
-    When I start an action chain
-    When I press "G"
-    When I type "1024"
-    When I press "RET"
-    When I type "365"
-    When I press "RET"
-    When I type "ca1"
-    When I press "RET"
-    When I type "ca1"
-    When I press "RET"    
-    When I press "RET"    
-    When I press "RET"    
-    When I press "RET"    
-    When I press "RET"    
-    When I type "US"
-    When I press "RET"
+    And I start an action chain
+    And I press "G"
+    And I type "1024"
+    And I press "RET"
+    And I type "365"
+    And I press "RET"
+    And I type "ca1"
+    And I press "RET"
+    And I type "ca1"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I type "US"
+    And I press "RET"
     And I execute the action chain    
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
