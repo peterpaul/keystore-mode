@@ -49,6 +49,8 @@ presence of a passphrase.  When the passphrase is not defined, the user is
 prompted to enter it, and the passphrase is stored in `keystore-passphrase'.
 
 Returns the value of `keystore-passphrase'."
+  (unless (equalp major-mode 'keystore-mode)
+    (error "Major mode of buffer `%s' is not `keystore-mode', but `%s'" (current-buffer) major-mode))
   (unless (boundp 'keystore-passphrase)
     (setq-local keystore-passphrase nil))
   (unless keystore-passphrase
@@ -413,24 +415,10 @@ asked whether he wants to try again."
         (error "The two provided values do not match")))
     val1))
 
-(defun keystore--do-genkeypair (keystore storepass keyalg keysize validity alias dname)
-  "Generate a self-signed keypair in KEYSTORE.
-Argument KEYSTORE The keystore file that will contain the generated key pair.
-Argument STOREPASS The password for the target keystore.
-Argument KEYALG The key algorithm.
-Argument KEYSIZE The size of the generated key.
-Argument VALIDITY The validity period of the certificate in days, starting now.
-Argument ALIAS The alias by which the keypair is stored in the keystore.
-Argument DNAME The subject distinguished name of the (self-signed) certificate."
-  (shell-command
-   (keystore-command "keytool"
-                     "-genkeypair"
-                     "-keyalg" "RSA"
-                     "-keysize" keysize
-                     "-validity" (number-to-string validity)
-                     "-alias" alias
-                     (keystore--arg-keystore keystore storepass)
-                     "-dname" (format "'%s'" dname))))
+(defun keystore--buffer-major-mode (buffer)
+  "Return the major mode associated with BUFFER."
+  (with-current-buffer buffer
+    major-mode))
 
 (defun keystore-genkeypair (keystore storepass keyalg keysize validity alias dname)
   "Generate a self-signed keypair in KEYSTORE.
@@ -449,8 +437,20 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
          (read-number "Validity (Days): " 365)
          (read-string "Alias: ")
          (keystore-ask-dname)))
-  (keystore--do-genkeypair keystore storepass keyalg keysize validity alias dname)
-  (list-keystore keystore storepass))
+  (shell-command
+   (keystore-command "keytool"
+                     "-genkeypair"
+                     "-keyalg" "RSA"
+                     "-keysize" keysize
+                     "-validity" (number-to-string validity)
+                     "-alias" alias
+                     (keystore--arg-keystore keystore storepass)
+                     "-dname" (format "'%s'" dname)))
+  (if (and (get-buffer keystore)
+         (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
+      (with-current-buffer (get-buffer keystore)
+        (keystore-render))
+    (list-keystore keystore storepass)))
 
 (defun keystore-genkeypair-list (keyalg keysize validity alias dname)
   "Generate a self-signed keypair in the current keystore.
@@ -465,8 +465,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
          (read-number "Validity (Days): " 365)
          (read-string "Alias: ")
          (keystore-ask-dname)))
-  (keystore--do-genkeypair buffer-file-name (keystore-get-passphrase-lazy) keyalg keysize validity alias dname)
-  (keystore-render))
+  (keystore-genkeypair buffer-file-name (keystore-get-passphrase-lazy) keyalg keysize validity alias dname))
 
 (defun keystore--jks? (keystore)
   "Return t when the string KEYSTORE ends with \".jks\", nil otherwise."

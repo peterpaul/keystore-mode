@@ -13,7 +13,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
     (dolist (row rows)
       (let ((alias (car row))
             (subject (cadr row)))
-        (keystore--do-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))))
+        (keystore-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))))
 
 (Given "^file \"\\(.+\\)\" does not exist$"
        (lambda (file)
