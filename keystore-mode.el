@@ -345,17 +345,12 @@ Returns the buffer containing the certificate."
    (list (read-file-name "Keystore to import: ")
          (read-passwd "Enter keystore passphrase")))
   (shell-command
-   (keystore-command "keytool"
-                     "-importkeystore"
-                     (keystore--arg-keystore srckeystore
-                                             srcstorepass
-                                             nil
-                                             "src")
-                     (keystore--arg-keystore buffer-file-name
-                                             (keystore-get-passphrase-lazy)
-                                             nil
-                                             "dest")
-                     "-noprompt"))
+   (keystore-command
+    "keytool"
+    "-importkeystore"
+    (keystore--arg-keystore srckeystore srcstorepass nil "src")
+    (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+    "-noprompt"))
   (keystore-render))
 
 (defun keystore--blank-string-p (str)
