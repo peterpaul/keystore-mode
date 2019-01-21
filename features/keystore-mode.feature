@@ -381,8 +381,13 @@ Feature: Keystore Mode
       | alias | subject      |
       | key   | CN=key, C=US |
     And I am in buffer "/tmp/keystore.jks"
-    When I import keystore "/tmp/other-keystore.p12" with password "insecure"
     When I start an action chain
+    And I press "I"
+    And I type "/tmp/other-keystore.p12"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I execute the action chain
     Then buffer "/tmp/keystore.jks" should contain pattern:
       """
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+intermediate
