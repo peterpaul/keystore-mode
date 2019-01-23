@@ -122,7 +122,7 @@
   (define-key keystore-details-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
   (setq font-lock-defaults '(keystore-details-highlights)))
 
-(setq origami-parser-alist (append origami-parser-alist `(keystore-details-mode . ,(origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))))
+(setq origami-parser-alist (cons `(keystore-details-mode . ,(origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))  origami-parser-alist))
 
 (provide 'keystore-details-mode)
 
