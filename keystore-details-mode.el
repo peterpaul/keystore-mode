@@ -6,7 +6,7 @@
 ;; URL: https://github.com/peterpaul/keystore-mode
 ;; Version: 0.0.1
 ;; Keywords: tools
-;; Package-Requires: ((emacs "25.1") (origami "1.0"))
+;; Package-Requires: ((emacs "24") (origami "1.0"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -41,7 +41,6 @@
 (require 'origami)
 (require 's)
 (require 'seq)
-(require 'map)
 
 (setq keystore-details-syntax-keywords
       '(
@@ -123,7 +122,7 @@
   (define-key keystore-details-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
   (setq font-lock-defaults '(keystore-details-highlights)))
 
-(map-put origami-parser-alist 'keystore-details-mode (origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))
+(setq origami-parser-alist (append origami-parser-alist `(keystore-details-mode . ,(origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))))
 
 (provide 'keystore-details-mode)
 
