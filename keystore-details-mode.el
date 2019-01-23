@@ -1,19 +1,19 @@
 ;;; keystore-details-mode.el --- A major mode for displaying JKS keystore deatils
 ;;; -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018 Peterpaul Taekele Klein Haneveld
+;; Copyright (C) 2018,2019 Peterpaul Taekele Klein Haneveld
 
 ;; Author: Peterpaul Taekele Klein Haneveld <pp.kleinhaneveld@gmail.com>
 ;; URL: https://github.com/peterpaul/keystore-mode
 ;; Version: 0.0.1
 ;; Keywords: tools
-;; Package-Requires: ((origami "1.0") (s "1.12.0"))
+;; Package-Requires: ((emacs "25.1") (origami "1.0"))
 
 ;; This file is not part of GNU Emacs.
 
 ;; MIT License
 ;;
-;; Copyright (C) 2018 Peterpaul Taekele Klein Haneveld
+;; Copyright (C) 2018,2019 Peterpaul Taekele Klein Haneveld
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to

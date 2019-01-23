@@ -1,7 +1,7 @@
 ;;; keystore-mode.el --- A major mode for viewing and managing (java) keystores.
 ;;; -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018 Peterpaul Taekele Klein Haneveld
+;; Copyright (C) 2018,2019 Peterpaul Taekele Klein Haneveld
 
 ;; Author: Peterpaul Taekele Klein Haneveld <pp.kleinhaneveld@gmail.com>
 ;; URL: https://github.com/peterpaul/keystore-mode
@@ -13,7 +13,7 @@
 
 ;; MIT License
 ;;
-;; Copyright (C) 2018 Peterpaul Taekele Klein Haneveld
+;; Copyright (C) 2018,2019 Peterpaul Taekele Klein Haneveld
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to
@@ -286,8 +286,7 @@ The CSR is saved in CSR-FILE."
                        (keystore--arg-keystore)))))
 
 (defun keystore-gencert (pos csr-file)
-  "Issue a certificate by the key entry at POS as a response to the certificate
-request CSR-FILE."
+  "Issue a certificate by the key entry at POS as a response to the certificate request CSR-FILE."
   (interactive "d\nfCSR file: ")
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
         (cert-file (format "%s.pem" csr-file)))
@@ -354,7 +353,7 @@ Returns the buffer containing the certificate."
   (keystore-render))
 
 (defun keystore--blank-string-p (str)
-  "Return t if STR contains only whitespace, is empty or is nil."
+  "Return t if STR is blank, empty or nil."
   (if str
       (s-matches? "^[[:space:]]*$" str)
     't))
