@@ -1,5 +1,4 @@
-;;; keystore-mode.el --- A major mode for viewing and managing (java) keystores.
-;;; -*- lexical-binding: t; -*-
+;;; keystore-mode.el --- A major mode for viewing and managing (java) keystores -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018,2019 Peterpaul Taekele Klein Haneveld
 

@@ -1,5 +1,4 @@
-;;; keystore-details-mode.el --- A major mode for displaying JKS keystore deatils
-;;; -*- lexical-binding: t; -*-
+;;; keystore-details-mode.el --- A major mode for displaying JKS keystore deatils -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018,2019 Peterpaul Taekele Klein Haneveld
 
