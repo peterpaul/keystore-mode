@@ -88,7 +88,7 @@ Note that all lists in ARGS are flattened.  I.e.
 will return
 
  \"keytool -list -keystore /tmp/keystore.jks\""
-  (mapconcat 'identity
+  (mapconcat #'identity
              (cons command
                    (keystore--flatten-list args))
              " "))
@@ -390,8 +390,8 @@ TODO escape commas in the value, and unescape when parsing."
              (setq locality-name (keystore--dname-prompt-element "L" "Locality Name/City: " locality-name))
              (setq state-name (keystore--dname-prompt-element "S" "State Name/Province: " state-name))
              (setq country (keystore--dname-prompt-element "C" "2 Character Country Id: " country))))
-      (setq dname-elements (seq-filter 'identity dname-elements))
-      (setq dname (mapconcat 'identity dname-elements ", ")))
+      (setq dname-elements (seq-filter #'identity dname-elements))
+      (setq dname (mapconcat #'identity dname-elements ", ")))
     dname))
 
 (defun keystore--prompt-passwd-twice (prompt)
@@ -485,21 +485,21 @@ Returns \"JKS\" or \"PKCS12\"."
 (defvar keystore-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
-    (define-key map "d" 'keystore-toggle-mark-delete)
-    (define-key map "x" 'keystore-execute)
-    (define-key map "c" 'keystore-changealias)
-    (define-key map "e" 'keystore-exportcert)
-    (define-key map "G" 'keystore-genkeypair-list)
-    (define-key map "p" 'keystore-printcert)
-    (define-key map "ib" 'keystore-importcert-buffer)
-    (define-key map "if" 'keystore-importcert-file)
-    (define-key map "I" 'keystore-importkeystore)
-    (define-key map "l" 'keystore-list)
-    (define-key map "r" 'keystore-list-rfc)
-    (define-key map "s" 'keystore-certreq)
-    (define-key map "S" 'keystore-gencert)
-    (define-key map "v" 'keystore-list-verbose)
-    (define-key map "q" 'kill-this-buffer)
+    (define-key map "d" #'keystore-toggle-mark-delete)
+    (define-key map "x" #'keystore-execute)
+    (define-key map "c" #'keystore-changealias)
+    (define-key map "e" #'keystore-exportcert)
+    (define-key map "G" #'keystore-genkeypair-list)
+    (define-key map "p" #'keystore-printcert)
+    (define-key map "ib" #'keystore-importcert-buffer)
+    (define-key map "if" #'keystore-importcert-file)
+    (define-key map "I" #'keystore-importkeystore)
+    (define-key map "l" #'keystore-list)
+    (define-key map "r" #'keystore-list-rfc)
+    (define-key map "s" #'keystore-certreq)
+    (define-key map "S" #'keystore-gencert)
+    (define-key map "v" #'keystore-list-verbose)
+    (define-key map "q" #'kill-this-buffer)
     map)
   "Local keymap for `keystore-mode' buffers.")
 
