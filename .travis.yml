@@ -14,6 +14,7 @@ matrix:
   fast_finish: true
   allow_failures:
     - env: EMACS_VERSION=snapshot
+    - env: EMACS_VERSION=24.3
 env:
   - EMACS_VERSION=24.3
   - EMACS_VERSION=25.1
