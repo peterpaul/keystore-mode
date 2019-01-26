@@ -75,8 +75,8 @@ transforms it to a table row for the tabulated-list."
   "Flatten LIST."
   (apply #'append
          (mapcar (lambda (x) (cond
-                         ((listp x) (keystore--flatten-list x))
-                         (t         (list x))))
+                              ((listp x) (keystore--flatten-list x))
+                              (t         (list x))))
                  list)))
 
 (defun keystore-command (command &rest args)
@@ -101,11 +101,11 @@ When STORETYPE is not passed, the type is determined from the KEYSTORE filename.
 When PREFIX is set, add this as a prefix to the option names, e.g. with `src'
 the keystore argument becomes `-srckeystore'."
   (let* ((keystore-filename (or keystore
-                               buffer-file-name))
+                                buffer-file-name))
          (keystore-password (or storepass
-                               (keystore-get-passphrase-lazy)))
+                                (keystore-get-passphrase-lazy)))
          (keystore-type (or storetype
-                           (keystore--storetype-from-name keystore-filename)))
+                            (keystore--storetype-from-name keystore-filename)))
          (option-prefix (or prefix "")))
     (list (format "-%skeystore" option-prefix) keystore-filename
           (format "-%sstorepass" option-prefix) keystore-password
@@ -367,7 +367,7 @@ previous result.
 
 TODO escape commas in the value, and unescape when parsing."
   (let* ((default-value (and previous-result
-                           (nth 1 (s-split "=" previous-result))))
+                             (nth 1 (s-split "=" previous-result))))
          (actual-prompt (if default-value
                             (format "%s[%s] " prompt default-value)
                           prompt))
@@ -381,7 +381,7 @@ TODO escape commas in the value, and unescape when parsing."
   (interactive)
   (let (common-name organization-unit organization-name locality-name state-name country dname dname-elements)
     (while (not (and dname
-                 (y-or-n-p (format "Do you accept: '%s'? " dname))))
+                     (y-or-n-p (format "Do you accept: '%s'? " dname))))
       (setq dname-elements
             (list
              (setq common-name (keystore--dname-prompt-element "CN" "Common Name: " common-name))
@@ -400,11 +400,11 @@ The password is only returned when both passwords match, otherwise the user is
 asked whether he wants to try again."
   (let (val1 val2)
     (while (or (not val1)
-              (not (string-equal val1 val2)))
+               (not (string-equal val1 val2)))
       (setq val1 (read-passwd prompt))
       (setq val2 (read-passwd (format "Repeat %s" prompt)))
       (unless (or (string-equal val1 val2)
-                 (y-or-n-p "The two provided values do not match, retry? "))
+                  (y-or-n-p "The two provided values do not match, retry? "))
         (error "The two provided values do not match")))
     val1))
 
@@ -440,7 +440,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
                      (keystore--arg-keystore keystore storepass)
                      "-dname" (format "'%s'" dname)))
   (if (and (get-buffer keystore)
-         (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
+           (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
       (with-current-buffer (get-buffer keystore)
         (keystore-render))
     (list-keystore keystore storepass)))
