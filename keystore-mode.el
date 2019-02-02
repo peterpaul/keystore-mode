@@ -469,7 +469,8 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
   (s-ends-with? ".p12" keystore t))
 
 ;; TODO make customize variable
-(setq keystore-default-storetype "JKS")
+(defvar keystore-default-storetype "JKS"
+  "The default keystore type to use when it could not be determined from the filename extension.")
 
 (defun keystore--storetype-from-name (keystore)
   "Try to determine the keystore type from the KEYSTORE filename extension.

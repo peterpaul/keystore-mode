@@ -42,69 +42,71 @@
 (require 's)
 (require 'seq)
 
-(setq keystore-details-syntax-keywords
-      '(
-        "Alias name"
-        "AuthorityInfoAccess"
-        "AuthorityKeyIdentifier"
-        "BasicConstraints"
-        "CRLDistributionPoints"
-        "Certificate chain length"
-        "Certificate fingerprints"
-        "Certificate fingerprint"
-        "CertificatePolicies"
-        "CertificatePolicyId"
-        "Certificate"
-        "Creation date"
-        "DistributionPoint"
-        "Entry type"
-        "ExtendedKeyUsages"
-        "Extensions"
-        "Issuer"
-        "KeyIdentifier"
-        "KeyUsage"
-        "Keystore provider"
-        "Keystore type"
-        "ObjectId"
-        "Owner"
-        "PolicyQualifierInfo"
-        "Serial number"
-        "Signature algorithm name"
-        "Subject Public Key Algorithm"
-        "SubjectAlternativeName"
-        "SubjectKeyIdentifier"
-        "URIName"
-        "Valid from"
-        "Version"
-        "accessLocation"
-        "accessMethod"
-        "qualifierID"
-        "qualifier"
-        "until"
-        ))
+(defvar keystore-details-syntax-keywords
+  '(
+    "Alias name"
+    "AuthorityInfoAccess"
+    "AuthorityKeyIdentifier"
+    "BasicConstraints"
+    "CRLDistributionPoints"
+    "Certificate chain length"
+    "Certificate fingerprints"
+    "Certificate fingerprint"
+    "CertificatePolicies"
+    "CertificatePolicyId"
+    "Certificate"
+    "Creation date"
+    "DistributionPoint"
+    "Entry type"
+    "ExtendedKeyUsages"
+    "Extensions"
+    "Issuer"
+    "KeyIdentifier"
+    "KeyUsage"
+    "Keystore provider"
+    "Keystore type"
+    "ObjectId"
+    "Owner"
+    "PolicyQualifierInfo"
+    "Serial number"
+    "Signature algorithm name"
+    "Subject Public Key Algorithm"
+    "SubjectAlternativeName"
+    "SubjectKeyIdentifier"
+    "URIName"
+    "Valid from"
+    "Version"
+    "accessLocation"
+    "accessMethod"
+    "qualifierID"
+    "qualifier"
+    "until"
+    )
+  "List of keywords, used for syntax highlighting.")
 
-(setq keystore-details-syntax-constants
-      '(
-        "[0-9A-F][0-9A-F]\\(:[0-9A-F][0-9A-F]\\)+"
-        "[0-9]+\\([\\.][0-9]+\\)+"
-        "[0-9A-F]+:\\( +[0-9A-F][0-9A-F]\\)+.*$"
-        "caIssuers"
-        "ocsp"
-        "serverAuth"
-        "clientAuth"
-        "DigitalSignature"
-        "Key_Encipherment"
-        "DNSName"
-        "trustedCertEntry"
-        "PrivateKeyEntry"
-        "MD5"
-        "SHA1withRSA"
-        "SHA1"
-        "SHA256withRSA"
-        "SHA256"
-        "SHA384withRSA"
-        "SHA384"
-        ))
+(defvar keystore-details-syntax-constants
+  '(
+    "[0-9A-F][0-9A-F]\\(:[0-9A-F][0-9A-F]\\)+"
+    "[0-9]+\\([\\.][0-9]+\\)+"
+    "[0-9A-F]+:\\( +[0-9A-F][0-9A-F]\\)+.*$"
+    "caIssuers"
+    "ocsp"
+    "serverAuth"
+    "clientAuth"
+    "DigitalSignature"
+    "Key_Encipherment"
+    "DNSName"
+    "trustedCertEntry"
+    "PrivateKeyEntry"
+    "MD5"
+    "SHA1withRSA"
+    "SHA1"
+    "SHA256withRSA"
+    "SHA256"
+    "SHA384withRSA"
+    "SHA384"
+    )
+  "List of constants, used for syntax highlighting.")
 
 (defun keystore-details-reduce-list-of-strings-to-regex (list-of-strings)
   "Reduce LIST-OF-STRINGS to a regex with multiple or clauses."
@@ -112,11 +114,12 @@
               (cdr list-of-strings)
               (car list-of-strings)))
 
-(setq keystore-details-highlights
-      (list (cons (keystore-details-reduce-list-of-strings-to-regex keystore-details-syntax-constants)
-                  font-lock-constant-face)
-            (cons (keystore-details-reduce-list-of-strings-to-regex keystore-details-syntax-keywords)
-                  font-lock-keyword-face)))
+(defvar keystore-details-highlights
+  (list (cons (keystore-details-reduce-list-of-strings-to-regex keystore-details-syntax-constants)
+              font-lock-constant-face)
+        (cons (keystore-details-reduce-list-of-strings-to-regex keystore-details-syntax-keywords)
+              font-lock-keyword-face))
+  "Define faces for syntax highlighting.")
 
 (define-derived-mode keystore-details-mode special-mode "keystore-details"
   (define-key keystore-details-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
