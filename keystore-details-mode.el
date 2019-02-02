@@ -123,9 +123,11 @@
 
 (define-derived-mode keystore-details-mode special-mode "keystore-details"
   (define-key keystore-details-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
+  (setq-local origami-parser-alist keystore-details-origami-parser-alist)
   (setq font-lock-defaults '(keystore-details-highlights)))
 
-(setq origami-parser-alist (cons `(keystore-details-mode . ,(origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----"))  origami-parser-alist))
+(defvar keystore-details-origami-parser-alist (list `(keystore-details-mode . ,(origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----")))
+  "Origami parsers to collapse certificates.")
 
 (provide 'keystore-details-mode)
 
