@@ -90,7 +90,7 @@ Note that all lists in ARGS are flattened.  I.e.
 will return
 
  \"keytool -list -keystore /tmp/keystore.jks\""
-  (mapconcat #'identity
+  (mapconcat #'shell-quote-argument
              (cons command
                    (keystore--flatten-list args))
              " "))
@@ -440,7 +440,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
                      "-validity" (number-to-string validity)
                      "-alias" alias
                      (keystore--arg-keystore keystore storepass)
-                     "-dname" (format "'%s'" dname)))
+                     "-dname" dname))
   (if (and (get-buffer keystore)
            (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
       (with-current-buffer (get-buffer keystore)
