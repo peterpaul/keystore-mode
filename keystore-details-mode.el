@@ -122,9 +122,12 @@
   "Define faces for syntax highlighting.")
 
 (define-derived-mode keystore-details-mode special-mode "keystore-details"
+  "Major mode to view keystore details."
   (define-key keystore-details-mode-map (kbd "<tab>") 'origami-recursively-toggle-node)
   (setq-local origami-parser-alist keystore-details-origami-parser-alist)
-  (setq font-lock-defaults '(keystore-details-highlights)))
+  (setq font-lock-defaults '(keystore-details-highlights))
+  (origami-mode)
+  (read-only-mode 1))
 
 (defvar keystore-details-origami-parser-alist (list `(keystore-details-mode . ,(origami-markers-parser "-----BEGIN CERTIFICATE-----" "-----END CERTIFICATE-----")))
   "Origami parsers to collapse certificates.")

@@ -192,16 +192,13 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                                           buffer-file-name))))
       (with-current-buffer buf
         (keystore-details-mode)
-        (origami-mode)
         (erase-buffer)
         (insert (keystore--do-list keystore storepass style))
         (goto-char (point-min))
         (while (re-search-forward "\n\n+" nil t)
           (replace-match "\n\n" nil nil))
         (goto-char (point-min))
-        (origami-close-all-nodes buf)
-        (switch-to-buffer-other-window buf)
-        ))))
+        (switch-to-buffer-other-window buf)))))
 
 (defun keystore-list-verbose ()
   "Open a new buffer with the output of `keytool -list -v'."
@@ -321,23 +318,21 @@ Returns the buffer containing the certificate."
   (interactive "d")
   (let* ((pem-buffer (keystore-exportcert pos))
          (alias (keystore--get-alias (tabulated-list-get-id pos)))
-         (target-buffer (get-buffer-create (format "*printcert: %s*" alias))))
+         (target-buffer (get-buffer-create (format "*printcert: %s*" alias)))
+         (inhibit-read-only t))
     (with-current-buffer target-buffer
       (keystore-details-mode)
-      (origami-mode)
-      (goto-char (point-min)))
+      (erase-buffer))
     (with-current-buffer pem-buffer
       (shell-command-on-region
        (point-min)
        (point-max)
        (keystore-command "keytool"
                          "-printcert")
-       target-buffer))
-    (kill-buffer pem-buffer)
+       target-buffer)
+      (kill-this-buffer))
     (with-current-buffer target-buffer
-      (goto-char (point-min))
-      (read-only-mode 1)
-      (origami-close-all-nodes target-buffer))))
+      (goto-char (point-min)))))
 
 (defun keystore-importkeystore (srckeystore srcstorepass)
   "Import SRCKEYSTORE with password SRCSTOREPASS into this keys."
