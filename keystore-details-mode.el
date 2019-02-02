@@ -6,7 +6,7 @@
 ;; URL: https://github.com/peterpaul/keystore-mode
 ;; Version: 0.0.1
 ;; Keywords: tools
-;; Package-Requires: ((emacs "24") (origami "1.0"))
+;; Package-Requires: ((emacs "24.3") (origami "1.0") (s "1.12.0") (seq "2.20"))
 
 ;; This file is not part of GNU Emacs.
 
