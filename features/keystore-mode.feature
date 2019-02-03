@@ -11,7 +11,7 @@ Feature: Keystore Mode
       | ca    | CN=ca, C=US   |
     When I start an action chain
     And I press "M-x"
-    And I type "list-keystore"
+    And I type "keystore-visit"
     And I press "RET"
     And I type "/tmp/keystore.jks"
     And I press "RET"

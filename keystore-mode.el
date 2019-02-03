@@ -440,7 +440,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
            (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
       (with-current-buffer (get-buffer keystore)
         (keystore-render))
-    (list-keystore keystore storepass)))
+    (keystore-visit keystore storepass)))
 
 (defun keystore-genkeypair-list (keyalg keysize validity alias dname)
   "Generate a self-signed keypair in the current keystore.
@@ -513,7 +513,7 @@ Returns \"JKS\" or \"PKCS12\"."
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
   (tabulated-list-init-header))
 
-(defun list-keystore (file &optional password)
+(defun keystore-visit (file &optional password)
   "Open keystore from FILE.
 Optional argument PASSWORD The password of KEYSTORE."
   (interactive "fKeystore File: ")

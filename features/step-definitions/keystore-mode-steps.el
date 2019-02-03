@@ -29,7 +29,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
        (lambda (keystore-file keystore-password keys)
          (Given (format "file \"%s\" does not exist" keystore-file))
          (keystore-steps-generate-keypairs-from-table keystore-file keystore-password keys)
-         (list-keystore keystore-file keystore-password)))
+         (keystore-visit keystore-file keystore-password)))
 
 (Given "^keystore \"\\(.+\\)\" with password \"\\(.+\\)\" and these keys:$"
        (lambda (keystore-file keystore-password keys)
@@ -67,7 +67,7 @@ KEYS is a table with two columns: 'alias' and 'subject'."
 
 (When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\"$"
       (lambda (keystore-file keystore-password)
-        (list-keystore keystore-file keystore-password)))
+        (keystore-visit keystore-file keystore-password)))
 
 (When "^I switch to buffer \"\\(.+\\)\"$"
       (lambda (buffer)
