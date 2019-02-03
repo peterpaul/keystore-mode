@@ -108,6 +108,13 @@ sudo update-locale LC_ALL=en_US.UTF-8
 - [ ] Detect incorrect entered keystore passwords, and re-prompt the user.
 - [ ] Currently generated keys get the keystore password, allow setting other passwords on keys.
 
+* Contributing
+
+I am open to any kind of feedback via issues.
+
+For bug-fixes and/or new features, open a pull-request. Please create or update
+testcases for your changes, and make sure to add yourself to the =AUTHORS= file.
+
 * Development
 
 This repository provides a [[https://github.com/cask/cask][Caskfile]] for development purposes.
