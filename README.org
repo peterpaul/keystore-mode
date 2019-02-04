@@ -119,6 +119,7 @@ sudo update-locale LC_ALL=en_US.UTF-8
 - [X] Backup the keystore before making changes to it.
 - [ ] Detect incorrect entered keystore passwords, and re-prompt the user.
 - [ ] Currently generated keys get the keystore password, allow setting other passwords on keys.
+- [ ] Use =call-process= or =process-file= to invoke =keytool=
 
 * Contributing
 
