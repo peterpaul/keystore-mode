@@ -356,13 +356,14 @@ Returns the buffer containing the certificate."
                           srckeystore
                           buffer-file-name))
     (backup-buffer)
-    (shell-command
-     (keystore-command
-      "keytool"
-      "-importkeystore"
-      (keystore--arg-keystore srckeystore srcstorepass nil "src")
-      (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
-      "-noprompt"))
+    (let ((inhibit-message t))
+      (shell-command
+       (keystore-command
+        "keytool"
+        "-importkeystore"
+        (keystore--arg-keystore srckeystore srcstorepass nil "src")
+        (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+        "-noprompt")))
     (keystore-render)))
 
 (defun keystore--blank-string-p (str)
