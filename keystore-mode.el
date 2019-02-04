@@ -504,12 +504,12 @@ Returns \"JKS\" or \"PKCS12\"."
 (define-derived-mode keystore-mode tabulated-list-mode "keystore"
   "\\<keystore-mode-map>
 \\{keystore-mode-map}"
-  (setq tabulated-list-format
-        `[("fingerprint" 64 nil)
-          ("type"        20 t)
-          ("alias"       64 t)])
-  (setq tabulated-list-padding 2)
-  (setq tabulated-list-sort-key (cons "alias" nil))
+  (setq-local tabulated-list-format
+              `[("fingerprint" 64 nil)
+                ("type"        20 t)
+                ("alias"       64 t)])
+  (setq-local tabulated-list-padding 2)
+  (setq-local tabulated-list-sort-key (cons "alias" nil))
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
   (tabulated-list-init-header))
 
