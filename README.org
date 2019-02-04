@@ -27,6 +27,20 @@ A major mode for viewing and managing (java) keystores in Emacs.
 This mode uses the =keytool= command, which comes with OpenJDK JRE.
 Make sure it is installed and available on the PATH.
 
+* Installation
+
+The package =keystore-mode= is available on the [[https://melpa.org/#/keystore-mode][MELPA]] repository.
+After MELPA is setup, as explained [[https://melpa.org/#/getting-started][here]] it can be installed with
+
+    : M-x package-install RET keystore-mode RET
+
+Or alternatively using [[https://github.com/jwiegley/use-package][use-package]] in your =init.el=
+
+#+CAPTION: init.el configuration with use-package
+#+BEGIN_SRC emacs-lisp
+(use-package keystore-mode)
+#+END_SRC
+
 * Usage
 
 There are several ways to open a buffer in =keystore-mode=.
@@ -81,20 +95,6 @@ The mode defines the following keybindings:
 
 The =keystore-list-rfc= command opens a buffer where the certificates are folded (using [[https://github.com/gregsexton/origami.el][origami.el]]).
 The folding can be toggled with the =<TAB>= key.
-
-* Installation
-
-The package =keystore-mode= is available on the [[https://melpa.org/#/keystore-mode][MELPA]] repository.
-After MELPA is setup, as explained [[https://melpa.org/#/getting-started][here]] it can be installed with
-
-    : M-x package-install RET keystore-mode RET
-
-Or alternatively using [[https://github.com/jwiegley/use-package][use-package]] in your =init.el=
-
-#+CAPTION: init.el configuration with use-package
-#+BEGIN_SRC emacs-lisp
-(use-package keystore-mode)
-#+END_SRC
 
 * Troubleshooting
 
