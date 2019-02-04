@@ -3,8 +3,33 @@ Feature: Keystore Mode
   As a user
   I want to manage the contents in emacs
 
+  Scenario: Creating an empty keystore
+    Given file "/tmp/keystore.jks" does not exist
+    And buffer "/tmp/keystore.jks" does not exist
+    When I start an action chain
+    And I press "M-x"
+    And I type "keystore-empty"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I execute the action chain
+    Then I should be in buffer "/tmp/keystore.jks"
+    And I should not see pattern:
+      """
+      .*PrivateKeyEntry.*
+      """
+    And I should not see pattern:
+      """
+      .*trustedCertEntry.*
+      """
+
   Scenario: Opening an existing keystore
-    Given buffer "/tmp/keystore.jks" does not exist
+    Given file "/tmp/keystore.jks" does not exist
+    And buffer "/tmp/keystore.jks" does not exist
     And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
@@ -23,6 +48,10 @@ Feature: Keystore Mode
       """
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
+      """
+    And I should see pattern:
+      """
+      .*PrivateKeyEntry.*
       """
 
   Scenario: Creating a keypair in a new keystore

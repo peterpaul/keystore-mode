@@ -325,6 +325,27 @@ Returns the buffer containing the certificate."
        cert-buffer)
       cert-buffer)))
 
+(defun keystore-empty (keystore storepass &optional prefixed)
+  "Create empty KEYSTORE file with password STOREPASS.
+When the KEYSTORE already exists, an error is raised. This behaviour can be
+overridden by the universal argument PREFIXED. When the universal argument
+is given, the current file is deleted.
+
+The `keytool' command does not have a way of creating an empty keystore, so
+this function works by first creating a keystore with one entry in it using
+`keytool -genkeypair', and then deleting the entry using `keytool -delete'."
+  (interactive
+   (list (read-file-name "Keystore File: ")
+         (keystore--prompt-passwd-twice "Keystore Passphrase: ")
+         current-prefix-arg))
+  (when (file-exists-p keystore)
+    (if prefixed
+        (delete-file keystore)
+      (error "File '%s' already exists, not generating empty keystore." keystore)))
+  (with-current-buffer (keystore-genkeypair keystore storepass "RSA" "1024" 365 "a" "CN=a")
+    (keystore--do-delete keystore storepass "a")
+    (keystore-render)))
+
 (defun keystore-printcert (pos)
   "Open a new buffer with the output of 'keytool -printcert' for entry at POS."
   (interactive "d")

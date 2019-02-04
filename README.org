@@ -51,6 +51,12 @@ Create a new keystore with =M-x keystore-genkeypair=. This command will prompt
 the user for certificate parameters. After the key and the certificate are
 generated, the keystore is displayed in a new buffer with =keystore-mode=.
 
+Or you can create an empty keystore with =M-x keystore-empty=. This command
+will prompt for a keystore filename and a keystore password (twice), and
+create that keystore. By default it will not overwrite existing files, this
+behaviour can be overridden with the universal argument, i.e.
+=C-u M-x keystore-empty=.
+
 ** Opening an existing keystore
 
 Open an existing keystore with =M-x keystore-visit=. After selecting the keystore
