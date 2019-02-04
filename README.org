@@ -83,27 +83,17 @@ The =keystore-list-rfc= command opens a buffer where the certificates are folded
 The folding can be toggled with the =<TAB>= key.
 
 * Installation
-** straight-use-package
 
-#+CAPTION: init.el configuration with use-package and straight
+The package =keystore-mode= is available on the [[https://melpa.org/#/keystore-mode][MELPA]] repository.
+After MELPA is setup, as explained [[https://melpa.org/#/getting-started][here]] it can be installed with
+
+    : M-x package-install RET keystore-mode RET
+
+Or alternatively using [[https://github.com/jwiegley/use-package][use-package]] in your =init.el=
+
+#+CAPTION: init.el configuration with use-package
 #+BEGIN_SRC emacs-lisp
-(use-package keystore-mode
-  :straight
-  (keystore-mode
-   :type git
-   :host github
-   :repo "peterpaul/keystore-mode"))
-#+END_SRC
-
-** quelpa-use-package
-
-#+CAPTION: init.el configuration with quelpa-use-package
-#+BEGIN_SRC emacs-lisp
-(use-package keystore-mode
-  :quelpa
-  (keystore-mode
-   :fetcher github
-   :repo "peterpaul/keystore-mode"))
+(use-package keystore-mode)
 #+END_SRC
 
 * Troubleshooting
