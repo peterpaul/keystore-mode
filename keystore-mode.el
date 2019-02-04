@@ -535,7 +535,8 @@ Returns \"JKS\" or \"PKCS12\"."
   (setq-local tabulated-list-padding 2)
   (setq-local tabulated-list-sort-key (cons "alias" nil))
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
-  (tabulated-list-init-header))
+  (tabulated-list-init-header)
+  (run-mode-hooks))
 
 (defun keystore-visit (file &optional password)
   "Open keystore from FILE.
