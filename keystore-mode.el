@@ -175,6 +175,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
         (forward-line)))
     (when (y-or-n-p (format "Are you sure you want to delete: %s? "
                             (mapcar #'keystore--get-alias delete-list)))
+      (backup-buffer)
       (dolist (entry-id delete-list)
         ;; (message "Deleting: '%s'" (keystore--get-alias entry-id))
         (keystore--do-delete buffer-file-name (keystore-get-passphrase-lazy)
@@ -216,6 +217,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
   (when (y-or-n-p (format "Are you sure you want to import '%s' with alias '%s'? "
                           cert-buffer
                           cert-alias))
+    (backup-buffer)
     (let ((keystore-file buffer-file-name)
           (keystore-pass (keystore-get-passphrase-lazy)))
       (save-excursion
@@ -237,6 +239,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
   (when (y-or-n-p (format "Are you sure you want to import '%s' with alias '%s'? "
                           cert-file
                           cert-alias))
+    (backup-buffer)
     (shell-command
      (keystore-command "keytool"
                        "-importcert"
@@ -263,6 +266,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
       (when (y-or-n-p (format "Are you sure you want to change alias '%s' to '%s'? "
                               alias
                               destalias))
+        (backup-buffer)
         (shell-command
          (keystore-command "keytool"
                            "-changealias"
@@ -339,14 +343,18 @@ Returns the buffer containing the certificate."
   (interactive
    (list (read-file-name "Keystore to import: ")
          (read-passwd "Enter keystore passphrase")))
-  (shell-command
-   (keystore-command
-    "keytool"
-    "-importkeystore"
-    (keystore--arg-keystore srckeystore srcstorepass nil "src")
-    (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
-    "-noprompt"))
-  (keystore-render))
+  (when (y-or-n-p (format "Are you sure you want to import keystore '%s' to '%s'? "
+                          srckeystore
+                          buffer-file-name))
+    (backup-buffer)
+    (shell-command
+     (keystore-command
+      "keytool"
+      "-importkeystore"
+      (keystore--arg-keystore srckeystore srcstorepass nil "src")
+      (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+      "-noprompt"))
+    (keystore-render)))
 
 (defun keystore--blank-string-p (str)
   "Return t if STR is blank, empty or nil."
@@ -504,6 +512,11 @@ Returns \"JKS\" or \"PKCS12\"."
 (define-derived-mode keystore-mode tabulated-list-mode "keystore"
   "\\<keystore-mode-map>
 \\{keystore-mode-map}"
+  ;; Modifications to the keystore are made using `keytool' on a file level.
+  ;; Therefor we must ensure that creating the backup does not remove the
+  ;; original file.
+  (setq-local backup-by-copying t)
+  ;; Setup tabulated-list-mode
   (setq-local tabulated-list-format
               `[("fingerprint" 64 nil)
                 ("type"        20 t)

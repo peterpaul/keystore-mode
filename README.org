@@ -44,6 +44,19 @@ file, you're asked to enter the keystore password. This password is stored in a
 buffer local variable. It is recommended to kill the buffer (bound to =q=)
 directly after you're done with the keystore.
 
+* Backups
+
+Following [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Backup.html][emacs' philosophy]], a backup of the keystore is created before any
+command is executed that modifies the keystore. In contrast to _normal_
+buffers, this is being done by the =backup-buffer= function because all
+keystore modifications are performed on the file system by the =keytool=
+command, and not on the contents of the buffer itself.
+
+As a consequence the backups will be created following customizations of the
+=backup= group, however hooks like =before-save-hook= and =after-save-hook=
+are not executed. So customizations based on those hooks (f.e. like proposed
+[[https://www.emacswiki.org/emacs/ForceBackups][on the wiki]]) will not have any effect here.
+
 * Key bindings
 
 The mode defines the following keybindings:
@@ -107,7 +120,7 @@ sudo update-locale LC_ALL=en_US.UTF-8
 * Future ideas/TODOs
 
 - [ ] Add support for =openssl= and make it a more generic/versatile keystore/certificate management tool.
-- [ ] Backup the keystore before making changes to it.
+- [X] Backup the keystore before making changes to it.
 - [ ] Detect incorrect entered keystore passwords, and re-prompt the user.
 - [ ] Currently generated keys get the keystore password, allow setting other passwords on keys.
 
