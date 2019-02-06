@@ -18,6 +18,7 @@ Feature: Keystore Mode
     And I press "RET"
     And I execute the action chain
     Then I should be in buffer "/tmp/keystore.jks"
+    And file "/tmp/keystore.jks" should exist
     And I should not see pattern:
       """
       .*PrivateKeyEntry.*
@@ -26,6 +27,21 @@ Feature: Keystore Mode
       """
       .*trustedCertEntry.*
       """
+
+  Scenario: Creating an empty keystore when file already exist
+    Given buffer "/tmp/keystore.jks" does not exist
+    When I start an action chain
+    And I press "M-x"
+    And I type "keystore-empty"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I execute the action chain, and capture errors
+    Then I should see error message "File ’/tmp/keystore.jks’ already exists, not generating empty keystore."
 
   Scenario: Opening an existing keystore
     Given file "/tmp/keystore.jks" does not exist

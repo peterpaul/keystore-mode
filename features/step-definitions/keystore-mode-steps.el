@@ -85,6 +85,25 @@ KEYS is a table with two columns: 'alias' and 'subject'."
       (lambda (srckeystore srcstorepass)
         (keystore-importkeystore srckeystore srcstorepass)))
 
+(When "^I execute the action chain, and capture errors$"
+      "Executes the action chain."
+      (lambda ()
+        (setq error-message-from-action-chain nil)
+        (condition-case err
+            (When "I execute the action chain")
+          (error
+           (setq error-message-from-action-chain (error-message-string err))
+           nil))))
+
+(Then "^I should see error message \"\\(.+\\)\"$"
+      (lambda (expected-error-message)
+        (let ((message-no-error "Expected error message '%s', but no error occurred.")
+              (message-mismatch "Expected error message '%s', but got '%s'."))
+          (cl-assert error-message-from-action-chain nil
+                     message-no-error expected-error-message)
+          (cl-assert (s-equals? error-message-from-action-chain expected-error-message) nil
+                     message-mismatch expected-error-message error-message-from-action-chain))))
+
 (Then "^buffer \"\\(.+\\)\" should exist$"
       (lambda (buffer)
         (let ((message "Expected buffer '%s' to exist, but all I got was %s"))

@@ -10,6 +10,8 @@
 (defvar keystore-mode-root-path
   (f-parent keystore-mode-features-path))
 
+(defvar error-message-from-action-chain nil)
+
 (defvar keystore-mode-yes-or-no
   't
   "Stub value to return from `yes-or-no-p' and `y-or-n-p'.")
