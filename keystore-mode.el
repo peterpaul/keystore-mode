@@ -81,19 +81,32 @@ transforms it to a table row for the tabulated-list."
                               (t         (list x))))
                  list)))
 
-(defun keystore-command (command &rest args)
-  "Create commandline for COMMAND with ARGS.
-Note that all lists in ARGS are flattened.  I.e.
+(defun keystore-command (command &rest arguments)
+  (let ((keytool-errors (make-temp-file "keytool-errors")))
+    (with-temp-buffer
+      (let* ((destination (list (current-buffer) keytool-errors))
+             (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments)))
+             (output (buffer-string))
+             (errors (with-temp-buffer
+                       (insert-file-contents-literally keytool-errors)
+                       (buffer-string))))
+        (delete-file keytool-errors)
+        (list retval output errors)))))
 
- (keystore-command \"keytool\" \"-list\" '(\"-keystore\" \"/tmp/keystore.jks\"))
-
-will return
-
- \"keytool -list -keystore /tmp/keystore.jks\""
-  (mapconcat #'shell-quote-argument
-             (cons command
-                   (keystore--flatten-list args))
-             " "))
+(defun keystore-command-on-region (command beg end &rest arguments)
+  (let ((keytool-errors (make-temp-file "keytool-errors"))
+        (keytool-input  (make-temp-file "keytool-input")))
+    (write-region beg end keytool-input)
+    (with-temp-buffer
+      (let* ((destination (list (current-buffer) keytool-errors))
+             (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments)))
+             (output (buffer-string))
+             (errors (with-temp-buffer
+                       (insert-file-contents-literally keytool-errors)
+                       (buffer-string))))
+        (delete-file keytool-errors)
+        (delete-file keytool-input)
+        (list retval output errors)))))
 
 (defun keystore--arg-keystore (&optional keystore storepass storetype prefix)
   "Create keytool argument list for KEYSTORE STOREPASS and STORETYPE.
@@ -118,11 +131,10 @@ the keystore argument becomes `-srckeystore'."
 You can pass an optional STYLE, which can actually be any parameter that
 keytool accepts, but is typically either `-rfc' or `-v'."
   (let ((inhibit-message t))
-    (shell-command-to-string
-     (keystore-command "keytool"
-                       "-list"
-                       (keystore--arg-keystore keystore-filename keystore-password)
-                       style))))
+    (cadr (keystore-command "keytool"
+                            "-list"
+                            (keystore--arg-keystore keystore-filename keystore-password)
+                            style))))
 
 (defun keystore--read-entries-from-keystore ()
   "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
@@ -224,15 +236,14 @@ keytool accepts, but is typically either `-rfc' or `-v'."
           (inhibit-message t))
       (save-excursion
         (set-buffer cert-buffer)
-        (shell-command-on-region
-         (point-min)
-         (point-max)
-         (keystore-command "keytool"
-                           "-importcert"
-                           (keystore--arg-keystore keystore-file
-                                                   keystore-pass)
-                           "-alias" cert-alias
-                           "-noprompt"))))
+        (keystore-command-on-region "keytool"
+                                    (point-min)
+                                    (point-max)
+                                    "-importcert"
+                                    (keystore--arg-keystore keystore-file
+                                                            keystore-pass)
+                                    "-alias" cert-alias
+                                    "-noprompt")))
     (keystore-render)))
 
 (defun keystore-importcert-file (cert-file cert-alias)
@@ -243,23 +254,21 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                           cert-alias))
     (backup-buffer)
     (let ((inhibit-message t))
-      (shell-command
-       (keystore-command "keytool"
-                         "-importcert"
-                         (keystore--arg-keystore)
-                         "-alias" cert-alias
-                         "-file" cert-file
-                         "-noprompt"))))
+      (keystore-command "keytool"
+                        "-importcert"
+                        (keystore--arg-keystore)
+                        "-alias" cert-alias
+                        "-file" cert-file
+                        "-noprompt")))
   (keystore-render))
 
 (defun keystore--do-delete (keystore storepass alias)
   "Delete entry from KEYSTORE with STOREPASS by ALIAS."
   (let ((inhibit-message t))
-    (shell-command
-     (keystore-command "keytool"
-                       "-delete"
-                       (keystore--arg-keystore keystore storepass)
-                       "-alias" alias))))
+    (keystore-command "keytool"
+                      "-delete"
+                      (keystore--arg-keystore keystore storepass)
+                      "-alias" alias)))
 
 (defun keystore-changealias (pos destalias)
   "Rename keystore entry at POS to DESTALIAS."
@@ -272,12 +281,11 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                               alias
                               destalias))
         (backup-buffer)
-        (shell-command
-         (keystore-command "keytool"
-                           "-changealias"
-                           (keystore--arg-keystore)
-                           "-alias" alias
-                           "-destalias" destalias))
+        (keystore-command "keytool"
+                          "-changealias"
+                          (keystore--arg-keystore)
+                          "-alias" alias
+                          "-destalias" destalias)
         (keystore-render)))))
 
 (defun keystore-certreq (pos csr-file)
@@ -286,12 +294,11 @@ The CSR is saved in CSR-FILE."
   (interactive "d\nfCSR output file: ")
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
         (inhibit-message t))
-    (shell-command
-     (keystore-command "keytool"
-                       "-certreq"
-                       "-alias" alias
-                       "-file" csr-file
-                       (keystore--arg-keystore)))))
+    (keystore-command "keytool"
+                      "-certreq"
+                      "-alias" alias
+                      "-file" csr-file
+                      (keystore--arg-keystore))))
 
 (defun keystore-gencert (pos csr-file)
   "Issue a certificate by the key entry at POS as a response to the certificate request CSR-FILE."
@@ -299,14 +306,13 @@ The CSR is saved in CSR-FILE."
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
         (cert-file (format "%s.pem" csr-file))
         (inhibit-message t))
-    (shell-command
-     (keystore-command "keytool"
-                       "-gencert"
-                       "-alias" alias
-                       (keystore--arg-keystore)
-                       "-infile" csr-file
-                       "-outfile" cert-file
-                       "-rfc"))))
+    (keystore-command "keytool"
+                      "-gencert"
+                      "-alias" alias
+                      (keystore--arg-keystore)
+                      "-infile" csr-file
+                      "-outfile" cert-file
+                      "-rfc")))
 
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
@@ -314,15 +320,16 @@ Return the buffer containing the certificate."
   (interactive "d")
   (save-excursion
     (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
+           (cert (cadr (keystore-command "keytool"
+                                         "-exportcert"
+                                         (keystore--arg-keystore)
+                                         "-alias" alias
+                                         "-rfc")))
            (cert-buffer (get-buffer-create (format "%s.pem" alias)))
            (inhibit-message t))
-      (shell-command
-       (keystore-command "keytool"
-                         "-exportcert"
-                         (keystore--arg-keystore)
-                         "-alias" alias
-                         "-rfc")
-       cert-buffer)
+      (with-current-buffer cert-buffer
+        (insert cert))
+      (view-buffer-other-window cert-buffer)
       cert-buffer)))
 
 (defun keystore-empty (keystore storepass &optional prefixed)
@@ -353,21 +360,22 @@ this function works by first creating a keystore with one entry in it using
   (let* ((pem-buffer (keystore-exportcert pos))
          (alias (keystore--get-alias (tabulated-list-get-id pos)))
          (target-buffer (get-buffer-create (format "*printcert: %s*" alias)))
+         printed-cert
          (inhibit-read-only t)
          (inhibit-message t))
     (with-current-buffer target-buffer
       (keystore-details-mode)
       (erase-buffer))
     (with-current-buffer pem-buffer
-      (shell-command-on-region
-       (point-min)
-       (point-max)
-       (keystore-command "keytool"
-                         "-printcert")
-       target-buffer)
+      (setq printed-cert (cadr (keystore-command-on-region "keytool"
+                                                           (point-min)
+                                                           (point-max)
+                                                           "-printcert")))
       (kill-this-buffer))
     (with-current-buffer target-buffer
-      (goto-char (point-min)))))
+      (insert printed-cert)
+      (goto-char (point-min))
+      (view-buffer-other-window target-buffer))))
 
 (defun keystore-importkeystore (srckeystore srcstorepass)
   "Import SRCKEYSTORE with password SRCSTOREPASS into this keys."
@@ -379,13 +387,12 @@ this function works by first creating a keystore with one entry in it using
                           buffer-file-name))
     (backup-buffer)
     (let ((inhibit-message t))
-      (shell-command
-       (keystore-command
-        "keytool"
-        "-importkeystore"
-        (keystore--arg-keystore srckeystore srcstorepass nil "src")
-        (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
-        "-noprompt")))
+      (keystore-command
+       "keytool"
+       "-importkeystore"
+       (keystore--arg-keystore srckeystore srcstorepass nil "src")
+       (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+       "-noprompt"))
     (keystore-render)))
 
 (defun keystore--blank-string-p (str)
@@ -468,15 +475,14 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
          (read-string "Alias: ")
          (keystore-ask-dname)))
   (let ((inhibit-message t))
-    (shell-command
-     (keystore-command "keytool"
-                       "-genkeypair"
-                       "-keyalg" "RSA"
-                       "-keysize" keysize
-                       "-validity" (number-to-string validity)
-                       "-alias" alias
-                       (keystore--arg-keystore keystore storepass)
-                       "-dname" dname)))
+    (keystore-command "keytool"
+                      "-genkeypair"
+                      "-keyalg" "RSA"
+                      "-keysize" keysize
+                      "-validity" (number-to-string validity)
+                      "-alias" alias
+                      (keystore--arg-keystore keystore storepass)
+                      "-dname" dname))
   (if (and (get-buffer keystore)
            (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
       (with-current-buffer (get-buffer keystore)
