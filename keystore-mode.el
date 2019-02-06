@@ -156,7 +156,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
   (elt (cadr (assoc id tabulated-list-entries)) 2))
 
 (defun keystore-render ()
-  "Render buffer."
+  "Render the keystore buffer, move point to the beginning of the buffer."
   (revert-buffer)
   (goto-char (point-min)))
 
@@ -310,7 +310,7 @@ The CSR is saved in CSR-FILE."
 
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
-Returns the buffer containing the certificate."
+Return the buffer containing the certificate."
   (interactive "d")
   (save-excursion
     (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
@@ -342,7 +342,8 @@ this function works by first creating a keystore with one entry in it using
     (if prefixed
         (delete-file keystore)
       (error "File '%s' already exists, not generating empty keystore." keystore)))
-  (with-current-buffer (keystore-genkeypair keystore storepass "RSA" "1024" 365 "a" "CN=a")
+  (keystore-genkeypair keystore storepass "RSA" "1024" 365 "a" "CN=a")
+  (with-current-buffer keystore
     (keystore--do-delete keystore storepass "a")
     (keystore-render)))
 

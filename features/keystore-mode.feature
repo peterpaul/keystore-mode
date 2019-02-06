@@ -43,9 +43,37 @@ Feature: Keystore Mode
     And I execute the action chain, and capture errors
     Then I should see error message "File ’/tmp/keystore.jks’ already exists, not generating empty keystore."
 
+  Scenario: Creating an empty keystore, forcing override
+    Given buffer "/tmp/keystore.jks" does not exist
+    And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
+      | alias | subject       |
+      | root  | CN=root, C=US |
+      | ca    | CN=ca, C=US   |
+    When I start an action chain
+    And I press "C-u"
+    And I press "M-x"
+    And I type "keystore-empty"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I execute the action chain
+    Then I should be in buffer "/tmp/keystore.jks"
+    And file "/tmp/keystore.jks" should exist
+    And I should not see pattern:
+      """
+      .*PrivateKeyEntry.*
+      """
+    And I should not see pattern:
+      """
+      .*trustedCertEntry.*
+      """
+
   Scenario: Opening an existing keystore
-    Given file "/tmp/keystore.jks" does not exist
-    And buffer "/tmp/keystore.jks" does not exist
+    Given buffer "/tmp/keystore.jks" does not exist
     And keystore "/tmp/keystore.jks" with password "insecure" and these keys:
       | alias | subject       |
       | root  | CN=root, C=US |
