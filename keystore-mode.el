@@ -83,30 +83,34 @@ transforms it to a table row for the tabulated-list."
 
 (defun keystore-command (command &rest arguments)
   (let ((keytool-errors (make-temp-file "keytool-errors")))
-    (with-temp-buffer
-      (let* ((destination (list (current-buffer) keytool-errors))
-             (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments)))
-             (output (buffer-string))
-             (errors (with-temp-buffer
-                       (insert-file-contents-literally keytool-errors)
-                       (buffer-string))))
-        (delete-file keytool-errors)
-        (list retval output errors)))))
+    (unwind-protect
+        (with-temp-buffer
+          (let* ((destination (list (current-buffer) keytool-errors))
+                 (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments)))
+                 (output (buffer-string))
+                 (errors (with-temp-buffer
+                           (insert-file-contents-literally keytool-errors)
+                           (buffer-string))))
+            (list retval output errors)))
+      (delete-file keytool-errors))))
 
 (defun keystore-command-on-region (command beg end &rest arguments)
   (let ((keytool-errors (make-temp-file "keytool-errors"))
         (keytool-input  (make-temp-file "keytool-input")))
-    (write-region beg end keytool-input)
-    (with-temp-buffer
-      (let* ((destination (list (current-buffer) keytool-errors))
-             (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments)))
-             (output (buffer-string))
-             (errors (with-temp-buffer
-                       (insert-file-contents-literally keytool-errors)
-                       (buffer-string))))
-        (delete-file keytool-errors)
-        (delete-file keytool-input)
-        (list retval output errors)))))
+    (unwind-protect
+        (progn 
+          (write-region beg end keytool-input)
+          (with-temp-buffer
+            (let* ((destination (list (current-buffer) keytool-errors))
+                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments)))
+                   (output (buffer-string))
+                   (errors (with-temp-buffer
+                             (insert-file-contents-literally keytool-errors)
+                             (buffer-string))))
+
+              (list retval output errors))))
+      (delete-file keytool-errors)
+      (delete-file keytool-input))))
 
 (defun keystore--arg-keystore (&optional keystore storepass storetype prefix)
   "Create keytool argument list for KEYSTORE STOREPASS and STORETYPE.
