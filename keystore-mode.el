@@ -94,21 +94,26 @@ transforms it to a table row for the tabulated-list."
             (list retval output errors)))
       (delete-file keytool-errors))))
 
-(defun keystore-command-on-region (command beg end &rest arguments)
+(defun keystore-command-on-region (command beg end &optional target-buffer &rest arguments)
+  "Execute COMMAND synchronously with region (BEG END) as input.
+When COMMAND exits with a non-zero exit code, an error is raised with standard error as message.
+
+When TARGET-BUFFER is passed, standard output is redirected to that buffer, otherwise standard output
+is returned as string."
   (let ((keytool-errors (make-temp-file "keytool-errors"))
         (keytool-input  (make-temp-file "keytool-input")))
     (unwind-protect
         (progn 
           (write-region beg end keytool-input)
           (with-temp-buffer
-            (let* ((destination (list (current-buffer) keytool-errors))
-                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments)))
-                   (output (buffer-string))
-                   (errors (with-temp-buffer
-                             (insert-file-contents-literally keytool-errors)
-                             (buffer-string))))
-
-              (list retval output errors))))
+            (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
+                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments))))
+              (if (eq 0 retval)
+                  (unless target-buffer
+                    (buffer-string))
+                (error "%s" (with-temp-buffer
+                              (insert-file-contents-literally keytool-errors)
+                              (buffer-string)))))))
       (delete-file keytool-errors)
       (delete-file keytool-input))))
 
@@ -238,11 +243,11 @@ keytool accepts, but is typically either `-rfc' or `-v'."
     (let ((keystore-file buffer-file-name)
           (keystore-pass (keystore-get-passphrase-lazy))
           (inhibit-message t))
-      (save-excursion
-        (set-buffer cert-buffer)
+      (with-current-buffer cert-buffer
         (keystore-command-on-region "keytool"
                                     (point-min)
                                     (point-max)
+                                    nil
                                     "-importcert"
                                     (keystore--arg-keystore keystore-file
                                                             keystore-pass)
@@ -364,20 +369,19 @@ this function works by first creating a keystore with one entry in it using
   (let* ((pem-buffer (keystore-exportcert pos))
          (alias (keystore--get-alias (tabulated-list-get-id pos)))
          (target-buffer (get-buffer-create (format "*printcert: %s*" alias)))
-         printed-cert
          (inhibit-read-only t)
          (inhibit-message t))
     (with-current-buffer target-buffer
       (keystore-details-mode)
       (erase-buffer))
     (with-current-buffer pem-buffer
-      (setq printed-cert (cadr (keystore-command-on-region "keytool"
-                                                           (point-min)
-                                                           (point-max)
-                                                           "-printcert")))
+      (keystore-command-on-region "keytool"
+                                  (point-min)
+                                  (point-max)
+                                  target-buffer
+                                  "-printcert")
       (kill-this-buffer))
     (with-current-buffer target-buffer
-      (insert printed-cert)
       (goto-char (point-min))
       (view-buffer-other-window target-buffer))))
 
