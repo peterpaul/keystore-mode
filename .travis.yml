@@ -38,4 +38,4 @@ install:
   - cask install
 script:
   # Run your tests
-  - cask exec ecukes --no-win
+  - cask exec ecukes --reporter magnars --no-win
