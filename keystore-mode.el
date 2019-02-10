@@ -87,10 +87,14 @@ transforms it to a table row for the tabulated-list."
         (with-temp-buffer
           (let* ((destination (list (current-buffer) keytool-errors))
                  (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments)))
+                 (inhibit-message nil)
                  (output (buffer-string))
                  (errors (with-temp-buffer
                            (insert-file-contents-literally keytool-errors)
                            (buffer-string))))
+            (unless (eq 0 retval)
+              (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
+              (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors)))
             (list retval output errors)))
       (delete-file keytool-errors))))
 
@@ -107,10 +111,13 @@ is returned as string."
           (write-region beg end keytool-input)
           (with-temp-buffer
             (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
-                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments))))
+                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments)))
+                   (inhibit-message nil))
               (if (eq 0 retval)
                   (unless target-buffer
                     (buffer-string))
+                (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
+                (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
                 (error "%s" (with-temp-buffer
                               (insert-file-contents-literally keytool-errors)
                               (buffer-string)))))))
