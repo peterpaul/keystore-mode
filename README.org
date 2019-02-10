@@ -120,6 +120,7 @@ sudo update-locale LC_ALL=en_US.UTF-8
 - [ ] Detect incorrect entered keystore passwords, and re-prompt the user.
 - [ ] Currently generated keys get the keystore password, allow setting other passwords on keys.
 - [X] Use =call-process= or =process-file= to invoke =keytool=
+- [ ] Make keystore-mode play nice with TRAMP, to allow managing remote keystores.
 
 * Contributing
 
