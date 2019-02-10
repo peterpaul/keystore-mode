@@ -82,26 +82,41 @@ transforms it to a table row for the tabulated-list."
                  list)))
 
 (defun keystore--buffer-string (buffer)
-  "Return BUFFER contents as string."
+  "Return BUFFER content as string."
   (with-current-buffer buffer
     (buffer-string)))
 
+(defun keystore--command-handler (retval target-buffer keytool-errors)
+  "Result handler for `keystore-command' functions, after command execution.
+Exit status is retrieved from RETVAL.
+Command output is retrieved from TARGET-BUFFER or otherwise `(current-buffer)'.
+Command errors are retrieved from file keytool-errors.
+
+When RETVAL is 0, return command output if TARGET-BUFFER is nil, otherwise
+raise an error using both command output and errors."
+  (if (eq 0 retval)
+      (unless target-buffer
+        (buffer-string))
+    (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
+          (errors (with-temp-buffer
+                    (insert-file-contents-literally keytool-errors)
+                    (buffer-string))))
+      (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
+      (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
+      (error "%s" (s-trim (format "%s\n%s" output errors))))))
+
 (defun keystore-command (command &optional target-buffer &rest arguments)
+  "Execute COMMAND synchronously.
+When COMMAND exits with a non-zero exit code, returns `nil'.
+
+When TARGET-BUFFER is passed, standard output is redirected to that buffer, otherwise standard output
+is returned as string."
   (let ((keytool-errors (make-temp-file "keytool-errors")))
     (unwind-protect
         (with-temp-buffer
           (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
                  (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments))))
-            (if (eq 0 retval)
-                (unless target-buffer
-                  (buffer-string))
-              (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
-                    (errors (with-temp-buffer
-                              (insert-file-contents-literally keytool-errors)
-                              (buffer-string))))
-                (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
-                (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
-                nil))))
+            (keystore--command-handler retval target-buffer keytool-errors)))
       (delete-file keytool-errors))))
 
 (defun keystore-command-on-region (command beg end &optional target-buffer &rest arguments)
@@ -118,16 +133,7 @@ is returned as string."
           (with-temp-buffer
             (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
                    (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments))))
-              (if (eq 0 retval)
-                  (unless target-buffer
-                    (buffer-string))
-                (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
-                      (errors (with-temp-buffer
-                                (insert-file-contents-literally keytool-errors)
-                                (buffer-string))))
-                  (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
-                  (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
-                  (error "%s" (s-trim (format "%s\n%s" output errors))))))))
+              (keystore--command-handler retval target-buffer keytool-errors))))
       (delete-file keytool-errors)
       (delete-file keytool-input))))
 

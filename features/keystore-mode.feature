@@ -135,23 +135,6 @@ Feature: Keystore Mode
   Scenario: Adding a keypair to an existing keystore
     Given buffer "/tmp/keystore.jks" does not exist
     When I create a keypair with alias "ca1" and subject "CN=ca1, C=US" in keystore "/tmp/keystore.jks" with password "insecure"
-    And I start an action chain
-    And I press "G"
-    And I type "1024"
-    And I press "RET"
-    And I type "365"
-    And I press "RET"
-    And I type "ca1"
-    And I press "RET"
-    And I type "ca1"
-    And I press "RET"
-    And I press "RET"
-    And I press "RET"
-    And I press "RET"
-    And I press "RET"
-    And I type "US"
-    And I press "RET"
-    And I execute the action chain    
     Then I should be in buffer "/tmp/keystore.jks"
     And I should see pattern:
       """
@@ -160,7 +143,24 @@ Feature: Keystore Mode
       """
 
   Scenario: Adding a keypair to an opened keystore
-    When I create a keypair with alias "ca2" and subject "CN=ca2, C=US"
+    Given I am in buffer "/tmp/keystore.jks"
+    When I start an action chain
+    And I press "G"
+    And I type "1024"
+    And I press "RET"
+    And I type "365"
+    And I press "RET"
+    And I type "ca2"
+    And I press "RET"
+    And I type "ca2"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I type "US"
+    And I press "RET"
+    And I execute the action chain    
     Then I should see pattern:
       """
       [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
@@ -169,15 +169,28 @@ Feature: Keystore Mode
       """
 
   Scenario: Overwriting an existing keypair to an existing keystore
-    When I create a keypair with alias "root" and subject "CN=root, C=US"
-    And I should see pattern:
-      """
-      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca1
-      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+ca2
-      [ ][ ][0-9A-F]+[ ]+PrivateKeyEntry[ ]+root
-      """
+    Given I am in buffer "/tmp/keystore.jks"
+    When I start an action chain
+    And I press "G"
+    And I type "1024"
+    And I press "RET"
+    And I type "365"
+    And I press "RET"
+    And I type "root"
+    And I press "RET"
+    And I type "another-root"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I press "RET"
+    And I type "US"
+    And I press "RET"
+    And I execute the action chain, and capture errors
+    Then I should see error message "keytool error: java.lang.Exception: Key pair not generated, alias <root> already exists"
 
   Scenario: Marking a keystore entry for deletion
+    Given I am in buffer "/tmp/keystore.jks"
     When I place the cursor before "ca1"
     And I press "d"
     And I place the cursor before "root"

@@ -93,6 +93,8 @@ KEYS is a table with two columns: 'alias' and 'subject'."
             (When "I execute the action chain")
           (error
            (setq error-message-from-action-chain (error-message-string err))
+           ;; disable action chain, since errors bypass the normal cleanup
+           (setq espuds-chain-active nil)
            nil))))
 
 (Then "^I should see error message \"\\(.+\\)\"$"
