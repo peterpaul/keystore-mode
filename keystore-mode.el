@@ -81,21 +81,28 @@ transforms it to a table row for the tabulated-list."
                               (t         (list x))))
                  list)))
 
-(defun keystore-command (command &rest arguments)
+(defun keystore--buffer-string (buffer)
+  "Return BUFFER contents as string."
+  (with-current-buffer buffer
+    (buffer-string)))
+
+(defun keystore-command (command &optional target-buffer &rest arguments)
   (let ((keytool-errors (make-temp-file "keytool-errors")))
     (unwind-protect
         (with-temp-buffer
-          (let* ((destination (list (current-buffer) keytool-errors))
+          (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
                  (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments)))
-                 (inhibit-message nil)
-                 (output (buffer-string))
-                 (errors (with-temp-buffer
-                           (insert-file-contents-literally keytool-errors)
-                           (buffer-string))))
-            (unless (eq 0 retval)
-              (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
-              (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors)))
-            (list retval output errors)))
+                 (inhibit-message nil))
+            (if (eq 0 retval)
+                (unless target-buffer
+                  (buffer-string))
+              (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
+                    (errors (with-temp-buffer
+                              (insert-file-contents-literally keytool-errors)
+                              (buffer-string))))
+                (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
+                (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
+                nil))))
       (delete-file keytool-errors))))
 
 (defun keystore-command-on-region (command beg end &optional target-buffer &rest arguments)
@@ -116,11 +123,13 @@ is returned as string."
               (if (eq 0 retval)
                   (unless target-buffer
                     (buffer-string))
-                (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
-                (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
-                (error "%s" (with-temp-buffer
-                              (insert-file-contents-literally keytool-errors)
-                              (buffer-string)))))))
+                (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
+                      (errors (with-temp-buffer
+                                (insert-file-contents-literally keytool-errors)
+                                (buffer-string))))
+                  (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
+                  (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
+                  (error "%s" (s-trim (format "%s\n%s" output errors))))))))
       (delete-file keytool-errors)
       (delete-file keytool-input))))
 
@@ -147,10 +156,11 @@ the keystore argument becomes `-srckeystore'."
 You can pass an optional STYLE, which can actually be any parameter that
 keytool accepts, but is typically either `-rfc' or `-v'."
   (let ((inhibit-message t))
-    (cadr (keystore-command "keytool"
-                            "-list"
-                            (keystore--arg-keystore keystore-filename keystore-password)
-                            style))))
+    (keystore-command "keytool"
+                      nil
+                      "-list"
+                      (keystore--arg-keystore keystore-filename keystore-password)
+                      style)))
 
 (defun keystore--read-entries-from-keystore ()
   "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
@@ -271,6 +281,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
     (backup-buffer)
     (let ((inhibit-message t))
       (keystore-command "keytool"
+                        nil
                         "-importcert"
                         (keystore--arg-keystore)
                         "-alias" cert-alias
@@ -282,6 +293,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
   "Delete entry from KEYSTORE with STOREPASS by ALIAS."
   (let ((inhibit-message t))
     (keystore-command "keytool"
+                      nil
                       "-delete"
                       (keystore--arg-keystore keystore storepass)
                       "-alias" alias)))
@@ -298,6 +310,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                               destalias))
         (backup-buffer)
         (keystore-command "keytool"
+                          nil
                           "-changealias"
                           (keystore--arg-keystore)
                           "-alias" alias
@@ -311,6 +324,7 @@ The CSR is saved in CSR-FILE."
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
         (inhibit-message t))
     (keystore-command "keytool"
+                      nil
                       "-certreq"
                       "-alias" alias
                       "-file" csr-file
@@ -323,6 +337,7 @@ The CSR is saved in CSR-FILE."
         (cert-file (format "%s.pem" csr-file))
         (inhibit-message t))
     (keystore-command "keytool"
+                      nil
                       "-gencert"
                       "-alias" alias
                       (keystore--arg-keystore)
@@ -336,15 +351,15 @@ Return the buffer containing the certificate."
   (interactive "d")
   (save-excursion
     (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-           (cert (cadr (keystore-command "keytool"
-                                         "-exportcert"
-                                         (keystore--arg-keystore)
-                                         "-alias" alias
-                                         "-rfc")))
+           (cert )
            (cert-buffer (get-buffer-create (format "%s.pem" alias)))
            (inhibit-message t))
-      (with-current-buffer cert-buffer
-        (insert cert))
+      (keystore-command "keytool"
+                        cert-buffer
+                        "-exportcert"
+                        (keystore--arg-keystore)
+                        "-alias" alias
+                        "-rfc")
       (view-buffer-other-window cert-buffer)
       cert-buffer)))
 
@@ -402,12 +417,12 @@ this function works by first creating a keystore with one entry in it using
                           buffer-file-name))
     (backup-buffer)
     (let ((inhibit-message t))
-      (keystore-command
-       "keytool"
-       "-importkeystore"
-       (keystore--arg-keystore srckeystore srcstorepass nil "src")
-       (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
-       "-noprompt"))
+      (keystore-command "keytool"
+                        nil
+                        "-importkeystore"
+                        (keystore--arg-keystore srckeystore srcstorepass nil "src")
+                        (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+                        "-noprompt"))
     (keystore-render)))
 
 (defun keystore--blank-string-p (str)
@@ -491,6 +506,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
          (keystore-ask-dname)))
   (let ((inhibit-message t))
     (keystore-command "keytool"
+                      nil
                       "-genkeypair"
                       "-keyalg" "RSA"
                       "-keysize" keysize
