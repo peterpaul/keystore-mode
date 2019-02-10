@@ -41,7 +41,7 @@ Feature: Keystore Mode
     And I type "insecure"
     And I press "RET"
     And I execute the action chain, and capture errors
-    Then I should see error message "File ’/tmp/keystore.jks’ already exists, not generating empty keystore."
+    Then I should see error message "File ’/tmp/keystore.jks’ already exists, not generating empty keystore"
 
   Scenario: Creating an empty keystore, forcing override
     Given buffer "/tmp/keystore.jks" does not exist

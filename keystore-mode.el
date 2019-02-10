@@ -67,8 +67,8 @@ This function checks the (buffer local) variable `keystore-passphrase' for the
 presence of a passphrase.  When the passphrase is not defined, the user is
 prompted to enter it, and the passphrase is stored in `keystore-passphrase'.
 
-The entered password is validated. When the password is not accepted, the
-user is given the choice to try again. When the user does not try again, an
+The entered password is validated.  When the password is not accepted, the
+user is given the choice to try again.  When the user does not try again, an
 error is raised.
 
 Returns the value of `keystore-passphrase'."
@@ -82,7 +82,7 @@ Returns the value of `keystore-passphrase'."
            (read-passwd (format "Enter keystore passphrase of '%s': "
                                 buffer-file-name))))
     (unless keystore-passphrase
-      (and (not (y-or-n-p "Entered password is not accepted, try again?"))
+      (and (not (y-or-n-p "Entered password is not accepted, try again? "))
            (error "Entered password is not accepted"))))
   keystore-passphrase)
 
@@ -116,7 +116,7 @@ transforms it to a table row for the tabulated-list."
   "Result handler for `keystore-command' functions, after command execution.
 Exit status is retrieved from RETVAL.
 Command output is retrieved from TARGET-BUFFER or otherwise `(current-buffer)'.
-Command errors are retrieved from file keytool-errors.
+Command errors are retrieved from file KEYTOOL-ERRORS.
 
 When RETVAL is 0, return command output if TARGET-BUFFER is nil, otherwise
 raise an error using both command output and errors."
@@ -132,11 +132,12 @@ raise an error using both command output and errors."
       (error "%s" (s-trim (format "%s\n%s" output errors))))))
 
 (defun keystore-command (command &optional target-buffer &rest arguments)
-  "Execute COMMAND synchronously.
-When COMMAND exits with a non-zero exit code, returns `nil'.
+  "Execute COMMAND synchronously, and pass output to TARGET-BUFFER.
+COMMAND is executed with ARGUMENTS.  When COMMAND exits with a
+non-zero exit code, returns nil.
 
-When TARGET-BUFFER is passed, standard output is redirected to that buffer, otherwise standard output
-is returned as string."
+When TARGET-BUFFER is passed, standard output is redirected to
+that buffer, otherwise standard output is returned as string."
   (let ((keytool-errors (make-temp-file "keytool-errors")))
     (unwind-protect
         (with-temp-buffer
@@ -147,14 +148,16 @@ is returned as string."
 
 (defun keystore-command-on-region (command beg end &optional target-buffer &rest arguments)
   "Execute COMMAND synchronously with region (BEG END) as input.
-When COMMAND exits with a non-zero exit code, an error is raised with standard error as message.
+COMMAND is executed with ARGUMENTS.  When COMMAND exits with a
+non-zero exit code, an error is raised with standard error as
+message.
 
-When TARGET-BUFFER is passed, standard output is redirected to that buffer, otherwise standard output
-is returned as string."
+When TARGET-BUFFER is passed, standard output is redirected to
+that buffer, otherwise standard output is returned as string."
   (let ((keytool-errors (make-temp-file "keytool-errors"))
         (keytool-input  (make-temp-file "keytool-input")))
     (unwind-protect
-        (progn 
+        (progn
           (write-region beg end keytool-input)
           (with-temp-buffer
             (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
@@ -387,8 +390,8 @@ Return the buffer containing the certificate."
 
 (defun keystore-empty (keystore storepass &optional prefixed)
   "Create empty KEYSTORE file with password STOREPASS.
-When the KEYSTORE already exists, an error is raised. This behaviour can be
-overridden by the universal argument PREFIXED. When the universal argument
+When the KEYSTORE already exists, an error is raised.  This behaviour can be
+overridden by the universal argument PREFIXED.  When the universal argument
 is given, the current file is deleted.
 
 The `keytool' command does not have a way of creating an empty keystore, so
@@ -401,7 +404,7 @@ this function works by first creating a keystore with one entry in it using
   (when (file-exists-p keystore)
     (if prefixed
         (delete-file keystore)
-      (error "File '%s' already exists, not generating empty keystore." keystore)))
+      (error "File '%s' already exists, not generating empty keystore" keystore)))
   (keystore-genkeypair keystore storepass "RSA" "1024" 365 "a" "CN=a")
   (with-current-buffer keystore
     (keystore--do-delete keystore storepass "a")
