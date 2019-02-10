@@ -571,6 +571,7 @@ Returns \"JKS\" or \"PKCS12\"."
   (setq-local tabulated-list-padding 2)
   (setq-local tabulated-list-sort-key (cons "alias" nil))
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
+  (add-hook 'write-contents-functions (lambda () (error "Keystore buffers are not supposed to be saved")) nil t)
   (tabulated-list-init-header)
   (run-mode-hooks))
 
