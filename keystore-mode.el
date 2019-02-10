@@ -48,21 +48,42 @@
   :type 'string
   :group 'keystore-mode)
 
+(defun keystore--validate-password (password)
+  "Try PASSWORD on keystore buffer.
+Return PASSWORD if accepted, otherwise nil."
+  (let ((inhibit-message t))
+    (condition-case nil
+        (progn
+          (keystore-command "keytool"
+                            nil
+                            "-list"
+                            (keystore--arg-keystore buffer-file-name password))
+          password)
+      (error nil))))
+
 (defun keystore-get-passphrase-lazy ()
   "Get the keystore passphrase lazily.
 This function checks the (buffer local) variable `keystore-passphrase' for the
 presence of a passphrase.  When the passphrase is not defined, the user is
 prompted to enter it, and the passphrase is stored in `keystore-passphrase'.
 
+The entered password is validated. When the password is not accepted, the
+user is given the choice to try again. When the user does not try again, an
+error is raised.
+
 Returns the value of `keystore-passphrase'."
   (unless (equalp major-mode 'keystore-mode)
     (error "Major mode of buffer `%s' is not `keystore-mode', but `%s'" (current-buffer) major-mode))
   (unless (boundp 'keystore-passphrase)
     (setq-local keystore-passphrase nil))
-  (unless keystore-passphrase
+  (while (not keystore-passphrase)
     (setq keystore-passphrase
-          (read-passwd (format "Enter keystore passphrase of '%s': "
-                               buffer-file-name))))
+          (keystore--validate-password
+           (read-passwd (format "Enter keystore passphrase of '%s': "
+                                buffer-file-name))))
+    (unless keystore-passphrase
+      (and (not (y-or-n-p "Entered password is not accepted, try again?"))
+           (error "Entered password is not accepted"))))
   keystore-passphrase)
 
 (defun keystore--prepare-record (record)

@@ -482,3 +482,33 @@ Feature: Keystore Mode
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-buffer
       [ ][ ][0-9A-F]+[ ]+trustedCertEntry[ ]+test-file
       """
+
+  Scenario: Reprompting incorrect password, without retry
+    Given buffer "/tmp/keystore.jks" does not exist
+    And I answer no
+    When I start an action chain
+    And I press "M-x"
+    And I type "keystore-visit"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "incorrect"
+    And I press "RET"
+    And I execute the action chain, and capture errors
+    Then I should see error message "Entered password is not accepted"
+
+  Scenario: Reprompting incorrect password, with valid retry
+    Given buffer "/tmp/keystore.jks" does not exist
+    And I answer yes
+    When I start an action chain
+    And I press "M-x"
+    And I type "keystore-visit"
+    And I press "RET"
+    And I type "/tmp/keystore.jks"
+    And I press "RET"
+    And I type "incorrect"
+    And I press "RET"
+    And I type "insecure"
+    And I press "RET"
+    And I execute the action chain, and capture errors
+    Then I should be in buffer "/tmp/keystore.jks"

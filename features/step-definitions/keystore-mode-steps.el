@@ -57,6 +57,14 @@ KEYS is a table with two columns: 'alias' and 'subject'."
          (let ((buf (get-buffer buffer)))
            (switch-to-buffer buf))))
 
+(When "^I answer yes$"
+      (lambda ()
+        (setq keystore-mode-yes-or-no t)))
+
+(When "^I answer no$"
+      (lambda ()
+        (setq keystore-mode-yes-or-no nil)))
+
 (When "^I create a keypair with alias \"\\(.+\\)\" and subject \"\\(.+\\)\"$"
       (lambda (alias subject)
         (keystore-genkeypair-list "RSA" "1024" 365 alias subject)))
