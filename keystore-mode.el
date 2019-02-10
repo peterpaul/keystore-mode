@@ -91,8 +91,7 @@ transforms it to a table row for the tabulated-list."
     (unwind-protect
         (with-temp-buffer
           (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
-                 (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments)))
-                 (inhibit-message nil))
+                 (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments))))
             (if (eq 0 retval)
                 (unless target-buffer
                   (buffer-string))
@@ -118,8 +117,7 @@ is returned as string."
           (write-region beg end keytool-input)
           (with-temp-buffer
             (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
-                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments)))
-                   (inhibit-message nil))
+                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments))))
               (if (eq 0 retval)
                   (unless target-buffer
                     (buffer-string))
@@ -155,12 +153,11 @@ the keystore argument becomes `-srckeystore'."
   "Execute 'keytool -list' for KEYSTORE-FILENAME with KEYSTORE-PASSWORD.
 You can pass an optional STYLE, which can actually be any parameter that
 keytool accepts, but is typically either `-rfc' or `-v'."
-  (let ((inhibit-message t))
-    (keystore-command "keytool"
-                      nil
-                      "-list"
-                      (keystore--arg-keystore keystore-filename keystore-password)
-                      style)))
+  (keystore-command "keytool"
+                    nil
+                    "-list"
+                    (keystore--arg-keystore keystore-filename keystore-password)
+                    style))
 
 (defun keystore--read-entries-from-keystore ()
   "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
@@ -258,8 +255,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                           cert-alias))
     (backup-buffer)
     (let ((keystore-file buffer-file-name)
-          (keystore-pass (keystore-get-passphrase-lazy))
-          (inhibit-message t))
+          (keystore-pass (keystore-get-passphrase-lazy)))
       (with-current-buffer cert-buffer
         (keystore-command-on-region "keytool"
                                     (point-min)
@@ -279,32 +275,29 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                           cert-file
                           cert-alias))
     (backup-buffer)
-    (let ((inhibit-message t))
-      (keystore-command "keytool"
-                        nil
-                        "-importcert"
-                        (keystore--arg-keystore)
-                        "-alias" cert-alias
-                        "-file" cert-file
-                        "-noprompt")))
+    (keystore-command "keytool"
+                      nil
+                      "-importcert"
+                      (keystore--arg-keystore)
+                      "-alias" cert-alias
+                      "-file" cert-file
+                      "-noprompt"))
   (keystore-render))
 
 (defun keystore--do-delete (keystore storepass alias)
   "Delete entry from KEYSTORE with STOREPASS by ALIAS."
-  (let ((inhibit-message t))
-    (keystore-command "keytool"
-                      nil
-                      "-delete"
-                      (keystore--arg-keystore keystore storepass)
-                      "-alias" alias)))
+  (keystore-command "keytool"
+                    nil
+                    "-delete"
+                    (keystore--arg-keystore keystore storepass)
+                    "-alias" alias))
 
 (defun keystore-changealias (pos destalias)
   "Rename keystore entry at POS to DESTALIAS."
   (interactive "d\nsDestination alias: ")
   
   (save-excursion
-    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-           (inhibit-message t))
+    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos))))
       (when (y-or-n-p (format "Are you sure you want to change alias '%s' to '%s'? "
                               alias
                               destalias))
@@ -321,8 +314,7 @@ keytool accepts, but is typically either `-rfc' or `-v'."
   "Generate a Certificate Signing Request (CSR) for the entry at POS.
 The CSR is saved in CSR-FILE."
   (interactive "d\nfCSR output file: ")
-  (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-        (inhibit-message t))
+  (let ((alias (keystore--get-alias (tabulated-list-get-id pos))))
     (keystore-command "keytool"
                       nil
                       "-certreq"
@@ -334,8 +326,7 @@ The CSR is saved in CSR-FILE."
   "Issue a certificate by the key entry at POS as a response to the certificate request CSR-FILE."
   (interactive "d\nfCSR file: ")
   (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-        (cert-file (format "%s.pem" csr-file))
-        (inhibit-message t))
+        (cert-file (format "%s.pem" csr-file)))
     (keystore-command "keytool"
                       nil
                       "-gencert"
@@ -352,8 +343,7 @@ Return the buffer containing the certificate."
   (save-excursion
     (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
            (cert )
-           (cert-buffer (get-buffer-create (format "%s.pem" alias)))
-           (inhibit-message t))
+           (cert-buffer (get-buffer-create (format "%s.pem" alias))))
       (keystore-command "keytool"
                         cert-buffer
                         "-exportcert"
@@ -391,8 +381,7 @@ this function works by first creating a keystore with one entry in it using
   (let* ((pem-buffer (keystore-exportcert pos))
          (alias (keystore--get-alias (tabulated-list-get-id pos)))
          (target-buffer (get-buffer-create (format "*printcert: %s*" alias)))
-         (inhibit-read-only t)
-         (inhibit-message t))
+         (inhibit-read-only t))
     (with-current-buffer target-buffer
       (keystore-details-mode)
       (erase-buffer))
@@ -416,13 +405,12 @@ this function works by first creating a keystore with one entry in it using
                           srckeystore
                           buffer-file-name))
     (backup-buffer)
-    (let ((inhibit-message t))
-      (keystore-command "keytool"
-                        nil
-                        "-importkeystore"
-                        (keystore--arg-keystore srckeystore srcstorepass nil "src")
-                        (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
-                        "-noprompt"))
+    (keystore-command "keytool"
+                      nil
+                      "-importkeystore"
+                      (keystore--arg-keystore srckeystore srcstorepass nil "src")
+                      (keystore--arg-keystore buffer-file-name (keystore-get-passphrase-lazy) nil "dest")
+                      "-noprompt")
     (keystore-render)))
 
 (defun keystore--blank-string-p (str)
@@ -504,16 +492,15 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
          (read-number "Validity (Days): " 365)
          (read-string "Alias: ")
          (keystore-ask-dname)))
-  (let ((inhibit-message t))
-    (keystore-command "keytool"
-                      nil
-                      "-genkeypair"
-                      "-keyalg" "RSA"
-                      "-keysize" keysize
-                      "-validity" (number-to-string validity)
-                      "-alias" alias
-                      (keystore--arg-keystore keystore storepass)
-                      "-dname" dname))
+  (keystore-command "keytool"
+                    nil
+                    "-genkeypair"
+                    "-keyalg" "RSA"
+                    "-keysize" keysize
+                    "-validity" (number-to-string validity)
+                    "-alias" alias
+                    (keystore--arg-keystore keystore storepass)
+                    "-dname" dname)
   (if (and (get-buffer keystore)
            (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
       (with-current-buffer (get-buffer keystore)
