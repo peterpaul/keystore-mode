@@ -43,6 +43,11 @@
 (require 's)
 (require 'seq)
 
+(defcustom keystore-default-storetype "JKS"
+  "The default keystore type to use when it could not be determined from the filename extension."
+  :type 'string
+  :group 'keystore-mode)
+
 (defun keystore-get-passphrase-lazy ()
   "Get the keystore passphrase lazily.
 This function checks the (buffer local) variable `keystore-passphrase' for the
@@ -535,10 +540,6 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
 (defun keystore--pkcs12? (keystore)
   "Return t when the string KEYSTORE ends with \".p12\", nil otherwise."
   (s-ends-with? ".p12" keystore t))
-
-;; TODO make customize variable
-(defvar keystore-default-storetype "JKS"
-  "The default keystore type to use when it could not be determined from the filename extension.")
 
 (defun keystore--storetype-from-name (keystore)
   "Try to determine the keystore type from the KEYSTORE filename extension.
