@@ -202,10 +202,10 @@ keytool accepts, but is typically either `-rfc' or `-v'."
                (keystore-info (keystore--do-list buffer-file-name
                                                  (keystore-get-passphrase-lazy)))
                (keystore-entries
-                (split-string (s-replace ", \n" ", " keystore-info)
-                              "[\n\r]+" t)))
+                (s-split "[\n\r]+"
+                         (s-replace ", \n" ", " keystore-info) t)))
           (dolist (entry keystore-entries out)
-            (let ((record (split-string entry "," nil " \t")))
+            (let ((record (mapcar #'s-trim (s-split "," entry))))
               (when (eq (length record) 5)
                 (setq entry-index (+ 1 entry-index))
                 (setq out (cons (list (number-to-string entry-index)
