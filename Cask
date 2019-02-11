@@ -5,6 +5,7 @@
 
 (depends-on "origami")
 (depends-on "s")
+(depends-on "seq")
 
 (development
  (depends-on "ecukes")
