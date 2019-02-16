@@ -530,7 +530,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
   (keystore-command "keytool"
                     nil
                     "-genkeypair"
-                    "-keyalg" "RSA"
+                    "-keyalg" keyalg
                     "-keysize" keysize
                     "-validity" (number-to-string validity)
                     "-alias" alias
