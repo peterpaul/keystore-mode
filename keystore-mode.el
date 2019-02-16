@@ -184,23 +184,15 @@ the keystore argument becomes `-srckeystore'."
           (format "-%sstorepass" option-prefix) keystore-password
           (format "-%sstoretype" option-prefix) keystore-type)))
 
-(defun keystore--do-list (keystore-filename keystore-password &optional style)
-  "Execute 'keytool -list' for KEYSTORE-FILENAME with KEYSTORE-PASSWORD.
-You can pass an optional STYLE, which can actually be any parameter that
-keytool accepts, but is typically either `-rfc' or `-v'."
-  (keystore-command "keytool"
-                    nil
-                    "-list"
-                    (keystore--arg-keystore keystore-filename keystore-password)
-                    style))
-
 (defun keystore--read-entries-from-keystore ()
   "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
   (setq tabulated-list-entries
         (let* ((out)
                (entry-index 0)
-               (keystore-info (keystore--do-list buffer-file-name
-                                                 (keystore-get-passphrase-lazy)))
+               (keystore-info   (keystore-command "keytool"
+                                                  nil
+                                                  "-list"
+                                                  (keystore--arg-keystore)))
                (keystore-entries
                 (s-split "[\n\r]+"
                          (s-replace ", \n" ", " keystore-info) t)))
@@ -265,7 +257,11 @@ keytool accepts, but is typically either `-rfc' or `-v'."
       (with-current-buffer buf
         (keystore-details-mode)
         (erase-buffer)
-        (insert (keystore--do-list keystore storepass style))
+        (keystore-command "keytool"
+                          buf
+                          "-list"
+                          (keystore--arg-keystore keystore storepass)
+                          style)
         (goto-char (point-min))
         (while (re-search-forward "\n\n+" nil t)
           (replace-match "\n\n" nil nil))
