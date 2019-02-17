@@ -45,19 +45,26 @@
 
 (defcustom keystore-default-storetype "JKS"
   "The default keystore type to use when it could not be determined from the filename extension."
-  :type 'string
+  :type '(choice (const :tag "JKS" "JKS")
+                 (const :tag "PKCS12" "PKCS12"))
+  :group 'keystore-mode)
+
+(defcustom keystore-validate-passwords t
+  "When t, validate passwords entered for existing keystores."
+  :type 'boolean
   :group 'keystore-mode)
 
 (defun keystore--validate-password (password)
-  "Try PASSWORD on keystore buffer.
+  "Try PASSWORD on keystore buffer by listing the keystore contents.
 Return PASSWORD if accepted, otherwise nil."
   (let ((inhibit-message t))
     (condition-case nil
         (progn
-          (keystore-command "keytool"
-                            nil
-                            "-list"
-                            (keystore--arg-keystore buffer-file-name password))
+          (and keystore-validate-passwords
+               (keystore-command "keytool"
+                                 nil
+                                 "-list"
+                                 (keystore--arg-keystore buffer-file-name password)))
           password)
       (error nil))))
 
