@@ -112,59 +112,56 @@ transforms it to a table row for the tabulated-list."
   (with-current-buffer buffer
     (buffer-string)))
 
-(defun keystore--command-handler (retval target-buffer keytool-errors)
-  "Result handler for `keystore-command' functions, after command execution.
-Exit status is retrieved from RETVAL.
-Command output is retrieved from TARGET-BUFFER or otherwise `(current-buffer)'.
-Command errors are retrieved from file KEYTOOL-ERRORS.
+(defun keystore-command/execute (command arguments &optional target-buffer input-file)
+  "Execute COMMAND with ARGUMENTS. Output is redirected to
+TARGET-BUFFER when non-nil, otherwise output is captured in a
+temporary buffer so that it can be used for error
+reporting. Command input is taken from INPUT-FILE or /dev/null.
 
-When RETVAL is 0, return command output if TARGET-BUFFER is nil, otherwise
-raise an error using both command output and errors."
-  (if (eq 0 retval)
-      (unless target-buffer
-        (buffer-string))
-    (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
-          (errors (with-temp-buffer
-                    (insert-file-contents-literally keytool-errors)
-                    (buffer-string))))
-      (message "stdout:\n\t%s" (s-replace "\n" "\n\t" output))
-      (message "stderr:\n\t%s" (s-replace "\n" "\n\t" errors))
-      (error "%s" (s-trim (format "%s\n%s" output errors))))))
-
-(defun keystore-command (command &optional target-buffer &rest arguments)
-  "Execute COMMAND synchronously, and pass output to TARGET-BUFFER.
-COMMAND is executed with ARGUMENTS.  When COMMAND exits with a
-non-zero exit code, returns nil.
-
-When TARGET-BUFFER is passed, standard output is redirected to
-that buffer, otherwise standard output is returned as string."
+When COMMAND exits with a non-zero exit code, an error is raised
+with standard output and standard error concatenated."
   (let ((keytool-errors (make-temp-file "keytool-errors")))
     (unwind-protect
         (with-temp-buffer
-          (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
-                 (retval (apply #'call-process command nil destination nil (keystore--flatten-list arguments))))
-            (keystore--command-handler retval target-buffer keytool-errors)))
+          (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors)))
+            (unless (eq 0 (apply #'call-process command input-file destination nil (keystore--flatten-list arguments)))
+              (let ((output (keystore--buffer-string (or target-buffer (current-buffer))))
+                    (errors (with-temp-buffer
+                              (insert-file-contents-literally keytool-errors)
+                              (buffer-string))))
+                (error "%s" (s-trim (format "%s\n%s" output errors)))))))
       (delete-file keytool-errors))))
+
+(defun keystore-command (command &optional target-buffer &rest arguments)
+  "Execute COMMAND synchronously, and pass output to TARGET-BUFFER.
+COMMAND is executed with ARGUMENTS. When COMMAND exits with a
+non-zero exit code, an error is raised with standard output and
+standard error concatenated.
+
+When TARGET-BUFFER is passed, standard output is redirected to
+that buffer."
+  (keystore-command/execute command arguments target-buffer))
 
 (defun keystore-command-on-region (command beg end &optional target-buffer &rest arguments)
   "Execute COMMAND synchronously with region (BEG END) as input.
 COMMAND is executed with ARGUMENTS.  When COMMAND exits with a
-non-zero exit code, an error is raised with standard error as
-message.
+non-zero exit code, an error is raised with standard output and
+standard error concatenated.
 
 When TARGET-BUFFER is passed, standard output is redirected to
-that buffer, otherwise standard output is returned as string."
-  (let ((keytool-errors (make-temp-file "keytool-errors"))
-        (keytool-input  (make-temp-file "keytool-input")))
+that buffer."
+  (let ((input-file  (make-temp-file "keytool-input")))
     (unwind-protect
         (progn
-          (write-region beg end keytool-input)
-          (with-temp-buffer
-            (let* ((destination (list (or target-buffer (current-buffer)) keytool-errors))
-                   (retval (apply #'call-process command keytool-input destination nil (keystore--flatten-list arguments))))
-              (keystore--command-handler retval target-buffer keytool-errors))))
-      (delete-file keytool-errors)
-      (delete-file keytool-input))))
+          (write-region beg end input-file)
+          (keystore-command/execute command arguments target-buffer input-file))
+      (delete-file input-file))))
+
+(defun keystore-command-to-string (command &rest arguments)
+  "Execute COMMAND with ARGUMENTS and return output as string."
+  (with-temp-buffer
+    (keystore-command command (current-buffer) arguments)
+    (buffer-string)))
 
 (defun keystore--arg-keystore (&optional keystore storepass storetype prefix)
   "Create keytool argument list for KEYSTORE STOREPASS and STORETYPE.
@@ -189,10 +186,9 @@ the keystore argument becomes `-srckeystore'."
   (setq tabulated-list-entries
         (let* ((out)
                (entry-index 0)
-               (keystore-info   (keystore-command "keytool"
-                                                  nil
-                                                  "-list"
-                                                  (keystore--arg-keystore)))
+               (keystore-info (keystore-command-to-string "keytool"
+                                                          "-list"
+                                                          (keystore--arg-keystore)))
                (keystore-entries
                 (s-split "[\n\r]+"
                          (s-replace ", \n" ", " keystore-info) t)))
