@@ -73,6 +73,10 @@ KEYS is a table with two columns: 'alias' and 'subject'."
       (lambda (alias subject keystore-file keystore-password)
         (keystore-genkeypair keystore-file keystore-password "RSA" "1024" 365 alias subject)))
 
+(When "^I create a secure key with alias \"\\(.+\\)\" in keystore \"\\(.+\\)\" with password \"\\(.+\\)\"$"
+      (lambda (alias keystore-file keystore-password)
+        (keystore-genseckey keystore-file keystore-password "AES" "128" alias)))
+
 (When "^I open keystore \"\\(.+\\)\" with password \"\\(.+\\)\"$"
       (lambda (keystore-file keystore-password)
         (keystore-visit keystore-file keystore-password)))

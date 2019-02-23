@@ -146,6 +146,7 @@ Feature: Keystore Mode
     Given I am in buffer "/tmp/keystore.jks"
     When I start an action chain
     And I press "G"
+    And I press "p"
     And I type "1024"
     And I press "RET"
     And I type "365"
@@ -172,6 +173,7 @@ Feature: Keystore Mode
     Given I am in buffer "/tmp/keystore.jks"
     When I start an action chain
     And I press "G"
+    And I press "p"
     And I type "1024"
     And I press "RET"
     And I type "365"
@@ -228,7 +230,7 @@ Feature: Keystore Mode
     Given buffer "*printcert: ca2" does not exist
     And I am in buffer "/tmp/keystore.jks"
     When I place the cursor before "ca2"
-    And I press "p"
+    And I press "P"
     Then buffer "*printcert: ca2*" should contain:
       """
       Owner: CN=ca2, C=US
@@ -454,7 +456,7 @@ Feature: Keystore Mode
   Scenario: Validating the generated certificate
     Given I am in buffer "/tmp/keystore.jks"
     When I place the cursor before "intermediate"
-    And I press "p"
+    And I press "P"
     Then buffer "*printcert: intermediate*" should contain pattern:
       """
       Owner: CN=ca2, C=US
@@ -512,3 +514,29 @@ Feature: Keystore Mode
     And I press "RET"
     And I execute the action chain, and capture errors
     Then I should be in buffer "/tmp/keystore.jks"
+
+  Scenario: Generating a secure key in a new keystore
+    Given file "/tmp/keystore.p12" does not exist
+    Given buffer "/tmp/keystore.p12" does not exist
+    When I create a secure key with alias "key" in keystore "/tmp/keystore.p12" with password "insecure"
+    Then I should be in buffer "/tmp/keystore.p12"
+    And I should see pattern:
+      """
+      .*SecretKeyEntry.*key.*
+      """
+
+  Scenario: Generating a secure key from a buffer
+    Given I am in buffer "/tmp/keystore.p12"
+    When I start an action chain
+    And I press "G"
+    And I press "s"
+    And I type "128"
+    And I press "RET"
+    And I type "something-else"
+    And I press "RET"
+    And I execute the action chain
+    Then I should see pattern:
+      """
+      .*SecretKeyEntry.*key.*
+      .*SecretKeyEntry.*something-else.*
+      """

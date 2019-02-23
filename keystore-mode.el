@@ -93,19 +93,6 @@ Returns the value of `keystore-passphrase'."
            (error "Entered password is not accepted"))))
   keystore-passphrase)
 
-(defun keystore--prepare-record (record)
-  "Convert RECORD to a table row for `tabulated-list'.
-Takes a keystore entry RECORD as parsed from the output of 'keytool -list', and
-transforms it to a table row for the tabulated-list."
-  (let* ((alias (nth 0 record))
-         (type (nth 3 record))
-         (fingerprint-field (nth 4 record))
-         (fingerprint (s-replace ":" ""
-                                 (substring fingerprint-field
-                                            (+ 2 (s-index-of ": "
-                                                             fingerprint-field))))))
-    (vector fingerprint type alias)))
-
 (defun keystore--flatten-list (list)
   "Flatten LIST."
   (apply #'append
@@ -120,10 +107,11 @@ transforms it to a table row for the tabulated-list."
     (buffer-string)))
 
 (defun keystore-command/execute (command arguments &optional target-buffer input-file)
-  "Execute COMMAND with ARGUMENTS. Output is redirected to
-TARGET-BUFFER when non-nil, otherwise output is captured in a
-temporary buffer so that it can be used for error
-reporting. Command input is taken from INPUT-FILE or /dev/null.
+  "Execute COMMAND with ARGUMENTS.
+Output is redirected to TARGET-BUFFER when non-nil, otherwise
+output is captured in a temporary buffer so that it can be used
+for error reporting.  Command input is taken from INPUT-FILE or
+/dev/null.
 
 When COMMAND exits with a non-zero exit code, an error is raised
 with standard output and standard error concatenated."
@@ -141,7 +129,7 @@ with standard output and standard error concatenated."
 
 (defun keystore-command (command &optional target-buffer &rest arguments)
   "Execute COMMAND synchronously, and pass output to TARGET-BUFFER.
-COMMAND is executed with ARGUMENTS. When COMMAND exits with a
+COMMAND is executed with ARGUMENTS.  When COMMAND exits with a
 non-zero exit code, an error is raised with standard output and
 standard error concatenated.
 
@@ -188,24 +176,86 @@ the keystore argument becomes `-srckeystore'."
           (format "-%sstorepass" option-prefix) keystore-password
           (format "-%sstoretype" option-prefix) keystore-type)))
 
+(defun keystore--get-current-line ()
+  "Return the current line as string."
+  (interactive)
+  (save-excursion
+    (let ((beg (progn (beginning-of-line) (point)))
+          (end (progn (end-of-line) (point))))
+      (buffer-substring beg end))))
+
+(defun keystore--get-current-line-as-kvp ()
+  "Return the current line as key-value-pair (kvp)."
+  (interactive)
+  (let ((kvp  (mapcar #'s-trim (s-split ": " (keystore--get-current-line)))))
+    (if (= (length kvp) 2)
+        (cons (car kvp) (cadr kvp))
+      nil)))
+
+(defun keystore--replace-all (search-regexp replacement)
+  "Replace all occurrences of SEARCH-REGEXP with REPLACEMENT in current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward search-regexp nil t)
+      (replace-match replacement t nil))))
+
+(defun keystore--alist-get-value (key alist &optional default)
+  "Retrieve value by KEY from ALIST, when not found return DEFAULT."
+  (let ((kvp (assoc key alist)))
+    (if kvp
+        (cdr kvp)
+      default)))
+
+(defun keystore--get-entries ()
+  "Read all keystore entries from the keystore associated with current buffer.
+Return a list of lists with key-value-pairs of the form (\"KEY\" . \"VALUE\")."
+  (interactive)
+  (let ((buf (get-buffer-create "*keystore entries*"))
+        entries
+        entry-point-min
+        entry-point-max)
+    (with-current-buffer buf
+      (erase-buffer))
+    (keystore-command "keytool"
+                      buf
+                      "-list"
+                      (keystore--arg-keystore)
+                      "-v")
+    (with-current-buffer buf
+      (keystore--replace-all " until: " "\nValid until: ")
+      (setq entry-point-max (point-max))
+      (goto-char entry-point-max)
+      (while (search-backward "Alias name:" nil t)
+        (let (entry)
+          (setq entry-point-min (point))
+          (delete-non-matching-lines "^[[:space:]]*[A-Z].*: .+" entry-point-min entry-point-max)
+          (goto-char (point-max))
+          (while (>= (point) entry-point-min)
+            (let ((line-as-kvp (keystore--get-current-line-as-kvp)))
+              (when line-as-kvp
+                (setq entry (cons line-as-kvp entry)))
+              (previous-line)))
+          (kill-region entry-point-min (point-max))
+          (setq entry-point-max entry-point-min)
+          (goto-char entry-point-max)
+          (setq entries (cons entry entries)))))
+    (kill-buffer buf)
+    entries))
+
 (defun keystore--read-entries-from-keystore ()
   "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
   (setq tabulated-list-entries
         (let* ((out)
                (entry-index 0)
-               (keystore-info (keystore-command-to-string "keytool"
-                                                          "-list"
-                                                          (keystore--arg-keystore)))
-               (keystore-entries
-                (s-split "[\n\r]+"
-                         (s-replace ", \n" ", " keystore-info) t)))
+               (keystore-entries (keystore--get-entries)))
           (dolist (entry keystore-entries out)
-            (let ((record (mapcar #'s-trim (s-split "," entry))))
-              (when (eq (length record) 5)
-                (setq entry-index (+ 1 entry-index))
-                (setq out (cons (list (number-to-string entry-index)
-                                      (keystore--prepare-record record))
-                                out))))))))
+            (setq entry-index (+ 1 entry-index))
+            (setq out (cons (list (number-to-string entry-index)
+                                  (vector
+                                   (s-replace ":" "" (keystore--alist-get-value "SHA256" entry ""))
+                                   (keystore--alist-get-value "Entry type" entry "")
+                                   (keystore--alist-get-value "Alias name" entry "")))
+                            out))))))
 
 (defun keystore-toggle-mark-delete (&optional _num)
   "Mark a keystore entry for deletion and move to the next line."
@@ -509,6 +559,39 @@ asked whether he wants to try again."
   (with-current-buffer buffer
     major-mode))
 
+(defun keystore--render-or-visit-keystore (keystore storepass)
+  "When a buffer for KEYSTORE exists, render that buffer, otherwise visit KEYSTORE with STOREPASS."
+  (if (and (get-buffer keystore)
+           (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
+      (with-current-buffer (get-buffer keystore)
+        (keystore-render))
+    (keystore-visit keystore storepass)))
+
+(defun keystore-genseckey (keystore storepass keyalg keysize alias)
+  "Generate a secure key in KEYSTORE with STOREPASS for KEYALG KEYSIZE and ALIAS."
+  (interactive
+   (list (read-file-name "Keystore File: ")
+         (keystore--prompt-passwd-twice "Keystore Passphrase: ")
+         "AES"
+         (completing-read "Key Size: " '("128" "256") nil t nil nil "128")
+         (read-string "Alias: ")))
+  (keystore-command "keytool"
+                    nil
+                    "-genseckey"
+                    "-keyalg" keyalg
+                    "-keysize" keysize
+                    "-alias" alias
+                    (keystore--arg-keystore keystore storepass))
+  (keystore--render-or-visit-keystore keystore storepass))
+
+(defun keystore-genseckey-list (keyalg keysize alias)
+  "Generate a secure key with KEYALG KEYSIZE and ALIAS."
+  (interactive
+   (list "AES"
+         (completing-read "Key Size: " '("128" "256") nil t nil nil "128")
+         (read-string "Alias: ")))
+  (keystore-genseckey buffer-file-name (keystore-get-passphrase-lazy) keyalg keysize alias))
+
 (defun keystore-genkeypair (keystore storepass keyalg keysize validity alias dname)
   "Generate a self-signed keypair in KEYSTORE.
 Argument KEYSTORE The keystore file that will contain the generated key pair.
@@ -535,11 +618,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
                     "-alias" alias
                     (keystore--arg-keystore keystore storepass)
                     "-dname" dname)
-  (if (and (get-buffer keystore)
-           (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
-      (with-current-buffer (get-buffer keystore)
-        (keystore-render))
-    (keystore-visit keystore storepass)))
+  (keystore--render-or-visit-keystore keystore storepass))
 
 (defun keystore-genkeypair-list (keyalg keysize validity alias dname)
   "Generate a self-signed keypair in the current keystore.
@@ -582,8 +661,9 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "x" #'keystore-execute)
     (define-key map "c" #'keystore-changealias)
     (define-key map "e" #'keystore-exportcert)
-    (define-key map "G" #'keystore-genkeypair-list)
-    (define-key map "p" #'keystore-printcert)
+    (define-key map "Gp" #'keystore-genkeypair-list)
+    (define-key map "Gs" #'keystore-genseckey-list)
+    (define-key map "P" #'keystore-printcert)
     (define-key map "ib" #'keystore-importcert-buffer)
     (define-key map "if" #'keystore-importcert-file)
     (define-key map "I" #'keystore-importkeystore)

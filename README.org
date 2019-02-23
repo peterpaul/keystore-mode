@@ -51,11 +51,15 @@ Create a new keystore with =M-x keystore-genkeypair=. This command will prompt
 the user for certificate parameters. After the key and the certificate are
 generated, the keystore is displayed in a new buffer with =keystore-mode=.
 
-Or you can create an empty keystore with =M-x keystore-empty=. This command
-will prompt for a keystore filename and a keystore password (twice), and
-create that keystore. By default it will not overwrite existing files, this
-behaviour can be overridden with the universal argument, i.e.
-=C-u M-x keystore-empty=.
+Or create a new keystore with =M-x keystore-genseckey=. This command will
+prompt the user for key parameters. After the key is generated, the key is
+displayed in a new buffer with =keystore-mode=.
+
+Alternatively you can create an empty keystore with =M-x
+keystore-empty=. This command will prompt for a keystore filename and a
+keystore password (twice), and create that keystore. By default it will not
+overwrite existing files, this behaviour can be overridden with the
+universal argument, i.e.  =C-u M-x keystore-empty=.
 
 ** Opening an existing keystore
 
@@ -87,8 +91,9 @@ The mode defines the following keybindings:
 | =x=  | keystore-execute            | Execute marked changes (deletes) guarded by =y-or-n-p=                          |
 | =c=  | keystore-changealias        | Change alias for entry under point using =keytool -changealias=                 |
 | =e=  | keystore-exportcert         | Export certificate for entry under point using =keytool -exportcert=            |
-| =g=  | keystore-list-genkeypair    | Generate a new key pair with self-signed certifiate using =keytool -genkeypair= |
-| =p=  | keystore-printcert          | Create new buffer with certificate defailt using =keytool -printcert=           |
+| =Gp= | keystore-genkeypair-list    | Generate a new key pair with self-signed certifiate using =keytool -genkeypair= |
+| =Gs= | keystore-genseckey-list     | Generate a new secure key using =keytool -genseckey=                            |
+| =P=  | keystore-printcert          | Create new buffer with certificate defailt using =keytool -printcert=           |
 | =ib= | keystore-importcert-buffer  | Import certificate from buffer using =keytool -importcert=                      |
 | =if= | keystore-importcert-file    | Import certificate from file using =keytool -importcert=                        |
 | =I=  | keystore-importkeystore     | Import a full keystore from file usig =keytool -importkeystore=                 |
