@@ -54,6 +54,28 @@
   :type 'boolean
   :group 'keystore-mode)
 
+(defcustom keystore-display-columns `[("fingerprint (SHA256)" 64 nil)
+                                      ;;("fingerprint (SHA1)" 40 nil)
+                                      ("type"        20 t)
+                                      ("alias"       64 t)]
+  "The columns to display in the keystore overview."
+  :type '(vector (list string integer boolean))
+  :group 'keystore-mode)
+
+(defcustom keystore-column-name-to-key-name-alist `(("fingerprint (SHA256)" . "SHA256")
+                                                    ("fingerprint (SHA1)" . "SHA1")
+                                                    ("type" . "Entry type")
+                                                    ("alias" . "Alias name"))
+  "Mapping of column display names, as defined in `keystore-display-columns', to key names as parsed from the output of `keytool -list -v'."
+  :type '(alist :key-type string :value-type string)
+  :group 'keystore-mode)
+
+(defcustom keystore-column-name-to-formatter-alist `(("fingerprint (SHA256)" . ,(lambda (x) (s-replace ":" "" x)))
+                                                     ("fingerprint (SHA1)" . ,(lambda (x) (s-replace ":" "" x))))
+  "Mapping of column display names, as defined in `keystore-display-columns', to formatter functions for display purposes."
+  :type '(alist :key-type string)
+  :group 'keystore-mode)
+
 (defun keystore--validate-password (password)
   "Try PASSWORD on keystore buffer by listing the keystore contents.
 Return PASSWORD if accepted, otherwise nil."
@@ -242,6 +264,20 @@ Return a list of lists with key-value-pairs of the form (\"KEY\" . \"VALUE\")."
     (kill-buffer buf)
     entries))
 
+(defun keystore--get-column-key (name)
+  "Get column key by column NAME to lookup values in the keystore entries.
+Return NAME when no mapping defined in `keystore-column-name-to-key-name-alist'."
+  (or (cdr (assoc name keystore-column-name-to-key-name-alist))
+      name))
+
+(defun keystore--get-formatter (name)
+  "Get formatter by column NAME to format values before displaying.
+A formatter is a function that takes a string argument and returns a string.
+
+Return `identity' when no mapping defined in `keystore-column-name-to-formatter-alist'."
+  (or (cdr (assoc name keystore-column-name-to-formatter-alist))
+      #'identity))
+
 (defun keystore--read-entries-from-keystore ()
   "Recompute `tabulated-list-entries' from the output of 'keytool -list'."
   (setq tabulated-list-entries
@@ -251,10 +287,14 @@ Return a list of lists with key-value-pairs of the form (\"KEY\" . \"VALUE\")."
           (dolist (entry keystore-entries out)
             (setq entry-index (+ 1 entry-index))
             (setq out (cons (list (number-to-string entry-index)
-                                  (vector
-                                   (s-replace ":" "" (keystore--alist-get-value "SHA256" entry ""))
-                                   (keystore--alist-get-value "Entry type" entry "")
-                                   (keystore--alist-get-value "Alias name" entry "")))
+                                  (vconcat
+                                   (mapcar
+                                    (lambda (x)
+                                      (let* ((column-name (car x))
+                                             (column-key (keystore--get-column-key column-name))
+                                             (formatter (keystore--get-formatter column-name)))
+                                        (apply formatter (list (keystore--alist-get-value column-key entry "")))))
+                                    tabulated-list-format)))
                             out))))))
 
 (defun keystore-toggle-mark-delete (&optional _num)
@@ -266,9 +306,14 @@ Return a list of lists with key-value-pairs of the form (\"KEY\" . \"VALUE\")."
       (tabulated-list-put-tag "D" t)
     (tabulated-list-put-tag " " t)))
 
+(defun keystore--get-alias-index ()
+  "Get index of `alias' column."
+  (seq-position tabulated-list-format "alias"
+                (lambda (x y) (s-equals-p (car x) y))))
+
 (defun keystore--get-alias (id)
   "Retrieve alias for keystore entry with ID."
-  (elt (cadr (assoc id tabulated-list-entries)) 2))
+  (elt (cadr (assoc id tabulated-list-entries)) (keystore--get-alias-index)))
 
 (defun keystore-render ()
   "Render the keystore buffer, move point to the beginning of the buffer."
@@ -684,10 +729,7 @@ Returns \"JKS\" or \"PKCS12\"."
   ;; original file.
   (setq-local backup-by-copying t)
   ;; Setup tabulated-list-mode
-  (setq-local tabulated-list-format
-              `[("fingerprint" 64 nil)
-                ("type"        20 t)
-                ("alias"       64 t)])
+  (setq-local tabulated-list-format keystore-display-columns)
   (setq-local tabulated-list-padding 2)
   (setq-local tabulated-list-sort-key (cons "alias" nil))
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
