@@ -54,12 +54,12 @@
   :type 'boolean
   :group 'keystore-mode)
 
-(defcustom keystore-display-columns `[("fingerprint (SHA256)" 64 nil)
+(defcustom keystore-display-columns `(("fingerprint (SHA256)" 64 nil)
                                       ;;("fingerprint (SHA1)" 40 nil)
                                       ("type"        20 t)
-                                      ("alias"       64 t)]
+                                      ("alias"       64 t))
   "The columns to display in the keystore overview."
-  :type '(vector (list string integer boolean))
+  :type '(repeat (list string integer boolean))
   :group 'keystore-mode)
 
 (defcustom keystore-column-name-to-key-name-alist `(("fingerprint (SHA256)" . "SHA256")
@@ -73,7 +73,7 @@
 (defcustom keystore-column-name-to-formatter-alist `(("fingerprint (SHA256)" . ,(lambda (x) (s-replace ":" "" x)))
                                                      ("fingerprint (SHA1)" . ,(lambda (x) (s-replace ":" "" x))))
   "Mapping of column display names, as defined in `keystore-display-columns', to formatter functions for display purposes."
-  :type '(alist :key-type string)
+  :type '(alist :key-type string :value-type function)
   :group 'keystore-mode)
 
 (defun keystore--validate-password (password)
@@ -729,7 +729,7 @@ Returns \"JKS\" or \"PKCS12\"."
   ;; original file.
   (setq-local backup-by-copying t)
   ;; Setup tabulated-list-mode
-  (setq-local tabulated-list-format keystore-display-columns)
+  (setq-local tabulated-list-format (vconcat keystore-display-columns))
   (setq-local tabulated-list-padding 2)
   (setq-local tabulated-list-sort-key (cons "alias" nil))
   (add-hook 'tabulated-list-revert-hook 'keystore--read-entries-from-keystore nil t)
@@ -745,6 +745,7 @@ Optional argument PASSWORD The password of KEYSTORE."
   (let ((buf (get-buffer-create file)))
     (with-current-buffer buf
       (keystore-mode)
+      (setq tabulated-list-format (vconcat keystore-display-columns))
       (setq-local buffer-file-name file)
       (when password
         (setq-local keystore-passphrase password))
