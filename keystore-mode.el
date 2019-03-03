@@ -184,12 +184,6 @@ that buffer."
           (keystore-command/execute command arguments target-buffer input-file))
       (delete-file input-file))))
 
-(defun keystore-command-to-string (command &rest arguments)
-  "Execute COMMAND with ARGUMENTS and return output as string."
-  (with-temp-buffer
-    (keystore-command command (current-buffer) arguments)
-    (buffer-string)))
-
 (defun keystore--arg-keystore (&optional keystore storepass storetype prefix)
   "Create keytool argument list for KEYSTORE STOREPASS and STORETYPE.
 The list will contain `-keystore', `-storepass' and `-storetype' arguments.
