@@ -59,7 +59,10 @@
                                       ("type"        20 t)
                                       ("alias"       64 t))
   "The columns to display in the keystore overview."
-  :type '(repeat (list string integer boolean))
+  :type '(repeat (list (string :tag "Column name")
+                       (integer :tag "Column width")
+                       (choice (boolean :tag "Sort by value?")
+                               (function :tag "Sorting predicate"))))
   :group 'keystore-mode)
 
 (defcustom keystore-column-name-to-key-name-alist `(("fingerprint (SHA256)" . "SHA256")
@@ -67,13 +70,15 @@
                                                     ("type" . "Entry type")
                                                     ("alias" . "Alias name"))
   "Mapping of column display names, as defined in `keystore-display-columns', to key names as parsed from the output of `keytool -list -v'."
-  :type '(alist :key-type string :value-type string)
+  :type '(alist :key-type (string :tag "Column name")
+                :value-type (string :tag "Column key"))
   :group 'keystore-mode)
 
 (defcustom keystore-column-name-to-formatter-alist `(("fingerprint (SHA256)" . ,(lambda (x) (s-replace ":" "" x)))
                                                      ("fingerprint (SHA1)" . ,(lambda (x) (s-replace ":" "" x))))
   "Mapping of column display names, as defined in `keystore-display-columns', to formatter functions for display purposes."
-  :type '(alist :key-type string :value-type function)
+  :type '(alist :key-type (string :tag "Column name")
+                :value-type (function :tag "Formatter function"))
   :group 'keystore-mode)
 
 (defun keystore--validate-password (password)
