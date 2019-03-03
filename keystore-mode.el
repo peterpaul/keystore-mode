@@ -81,6 +81,11 @@
                 :value-type (function :tag "Formatter function"))
   :group 'keystore-mode)
 
+(defcustom keystore-column-keys nil
+  "Discovered column keys.  This variable only exists for display purposes, changing it has no effect."
+  :type '(repeat string)
+  :group 'keystore-mode)
+
 (defun keystore--validate-password (password)
   "Try PASSWORD on keystore buffer by listing the keystore contents.
 Return PASSWORD if accepted, otherwise nil."
@@ -216,7 +221,10 @@ the keystore argument becomes `-srckeystore'."
   (interactive)
   (let ((kvp  (mapcar #'s-trim (s-split ": " (keystore--get-current-line)))))
     (if (= (length kvp) 2)
-        (cons (car kvp) (cadr kvp))
+        (let ((key (car kvp))
+              (value (cadr kvp)))
+          (setq keystore-column-keys (cons key keystore-column-keys))
+          (cons key value))
       nil)))
 
 (defun keystore--replace-all (search-regexp replacement)
@@ -267,6 +275,7 @@ Return a list of lists with key-value-pairs of the form (\"KEY\" . \"VALUE\")."
           (goto-char entry-point-max)
           (setq entries (cons entry entries)))))
     (kill-buffer buf)
+    (setq keystore-column-keys (seq-sort #'string-lessp (seq-uniq keystore-column-keys)))
     entries))
 
 (defun keystore--get-column-key (name)
