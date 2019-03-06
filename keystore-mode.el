@@ -43,6 +43,10 @@
 (require 's)
 (require 'seq)
 
+(defgroup keystore-mode nil
+  "Manage JKS/PKCS12 keystores."
+  :group 'data)
+
 (defcustom keystore-default-storetype "JKS"
   "The default keystore type to use when it could not be determined from the filename extension."
   :type '(choice (const :tag "JKS" "JKS")
