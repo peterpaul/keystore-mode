@@ -78,8 +78,8 @@
                 :value-type (string :tag "Column key"))
   :group 'keystore-mode)
 
-(defcustom keystore-column-name-to-formatter-alist `(("fingerprint (SHA256)" . ,(lambda (x) (s-replace ":" "" x)))
-                                                     ("fingerprint (SHA1)" . ,(lambda (x) (s-replace ":" "" x))))
+(defcustom keystore-column-name-to-formatter-alist `(("fingerprint (SHA256)" . keystore--formatter-remove-colons)
+                                                     ("fingerprint (SHA1)" . keystore--formatter-remove-colons))
   "Mapping of column display names, as defined in `keystore-display-columns', to formatter functions for display purposes."
   :type '(alist :key-type (string :tag "Column name")
                 :value-type (function :tag "Formatter function"))
@@ -89,6 +89,10 @@
   "Discovered column keys.  This variable only exists for display purposes, changing it has no effect."
   :type '(repeat string)
   :group 'keystore-mode)
+
+(defun keystore--formatter-remove-colons (string)
+  "Remove all colons (':') from STRING."
+  (s-replace ":" "" string))
 
 (defun keystore--validate-password (password)
   "Try PASSWORD on keystore buffer by listing the keystore contents.
