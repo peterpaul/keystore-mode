@@ -99,6 +99,7 @@ The mode defines the following keybindings:
 | =I=  | keystore-importkeystore     | Import a full keystore from file usig =keytool -importkeystore=                 |
 | =l=  | keystore-list               | Open new buffer with output of =keytool -list=                                  |
 | =r=  | keystore-list-rfc           | Open new buffer with output of =keytool -list -rfc=                             |
+| =R=  | keystore-revisit            | Completely reload current keystore, to refresh customizations                   |
 | =s=  | keystore-certreq            | Generate a CSR file for key under point with =keytool -certreq=                 |
 | =S=  | keystore-gencert            | Generate a certificate for CSR file with =keytool -gencert=                     |
 | =v=  | keystore-list-verbose       | Open new buffer with output of =keytool -list -v=                               |
@@ -106,6 +107,26 @@ The mode defines the following keybindings:
 
 The =keystore-list-rfc= command opens a buffer where the certificates are folded (using [[https://github.com/gregsexton/origami.el][origami.el]]).
 The folding can be toggled with the =<TAB>= key.
+
+* Customization
+
+=keystore-mode= is customizable in the customization group =keystore-mode=
+(=M-x customize-group RET keystore-mode RET=). For example the following
+configuration shows SHA1 fingerprint instead of SHA256 and adds the validity
+dates of certificates.
+
+#+BEGIN_SRC emacs-lisp
+(custom-set-variables
+ '(keystore-display-columns
+   '(("fingerprint (SHA1)" 40 nil)
+     ("type" 20 t)
+     ("alias" 64 t)
+     ("Valid from" 32 nil)
+     ("Valid until" 0 nil))))
+#+END_SRC
+
+To apply new customizations to existing keystore buffers, use
+=keystore-revisit=.
 
 * Troubleshooting
 

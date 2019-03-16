@@ -540,3 +540,12 @@ Feature: Keystore Mode
       .*SecretKeyEntry.*key.*
       .*SecretKeyEntry.*something-else.*
       """
+
+  Scenario: Refreshing a keystore
+    Given I am in buffer "/tmp/keystore.p12"
+    When I press "R"
+    Then I should see pattern:
+      """
+      .*SecretKeyEntry.*key.*
+      .*SecretKeyEntry.*something-else.*
+      """

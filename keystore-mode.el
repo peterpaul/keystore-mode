@@ -620,14 +620,6 @@ asked whether he wants to try again."
   (with-current-buffer buffer
     major-mode))
 
-(defun keystore--render-or-visit-keystore (keystore storepass)
-  "When a buffer for KEYSTORE exists, render that buffer, otherwise visit KEYSTORE with STOREPASS."
-  (if (and (get-buffer keystore)
-           (equalp (keystore--buffer-major-mode keystore) 'keystore-mode))
-      (with-current-buffer (get-buffer keystore)
-        (keystore-render))
-    (keystore-visit keystore storepass)))
-
 (defun keystore-genseckey (keystore storepass keyalg keysize alias)
   "Generate a secure key in KEYSTORE with STOREPASS for KEYALG KEYSIZE and ALIAS."
   (interactive
@@ -643,7 +635,7 @@ asked whether he wants to try again."
                     "-keysize" keysize
                     "-alias" alias
                     (keystore--arg-keystore keystore storepass))
-  (keystore--render-or-visit-keystore keystore storepass))
+  (keystore-visit keystore storepass))
 
 (defun keystore-genseckey-list (keyalg keysize alias)
   "Generate a secure key with KEYALG KEYSIZE and ALIAS."
@@ -679,7 +671,7 @@ Argument DNAME The subject distinguished name of the (self-signed) certificate."
                     "-alias" alias
                     (keystore--arg-keystore keystore storepass)
                     "-dname" dname)
-  (keystore--render-or-visit-keystore keystore storepass))
+  (keystore-visit keystore storepass))
 
 (defun keystore-genkeypair-list (keyalg keysize validity alias dname)
   "Generate a self-signed keypair in the current keystore.
@@ -730,6 +722,7 @@ Returns \"JKS\" or \"PKCS12\"."
     (define-key map "I" #'keystore-importkeystore)
     (define-key map "l" #'keystore-list)
     (define-key map "r" #'keystore-list-rfc)
+    (define-key map "R" #'keystore-revisit)
     (define-key map "s" #'keystore-certreq)
     (define-key map "S" #'keystore-gencert)
     (define-key map "v" #'keystore-list-verbose)
@@ -768,6 +761,11 @@ Optional argument PASSWORD The password of KEYSTORE."
       (keystore--read-entries-from-keystore)
       (tabulated-list-print t))
     (switch-to-buffer buf)))
+
+(defun keystore-revisit ()
+  "Reload current keystore"
+  (interactive)
+  (keystore-visit buffer-file-name (keystore-get-passphrase-lazy)))
 
 (provide 'keystore-mode)
 
