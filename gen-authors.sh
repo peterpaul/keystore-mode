@@ -7,5 +7,6 @@
 git shortlog -se \
     | sed -E -e 's/[[:blank:]]+[0-9]+[[:blank:]]+//' \
     | sed 's/Peterpaul Klein Haneveld/Peterpaul Taekele Klein Haneveld/' \
+    | sed 's/peterpaul@zenbook.home/pp.kleinhaneveld@gmail.com/' \
     | uniq \
           > AUTHORS
