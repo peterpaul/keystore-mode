@@ -327,11 +327,11 @@ Return `identity' when no mapping defined in `keystore-column-name-to-formatter-
   (seq-position tabulated-list-format "alias"
                 (lambda (x y) (s-equals-p (car x) y))))
 
-(defun keystore--get-alias (&optional id)
-  "Retrieve alias for keystore entry with ID."
-  (if id
-      (elt (cadr (assoc id tabulated-list-entries)) (keystore--get-alias-index))
-    (elt (tabulated-list-get-entry (point)) (keystore--get-alias-index))))
+(defun keystore--get-alias (&optional entry)
+  "Retrieve alias for keystore ENTRY or current position."
+  (elt (or entry
+           (tabulated-list-get-entry (point)))
+       (keystore--get-alias-index)))
 
 (defun keystore-render ()
   "Render the keystore buffer, move point to the beginning of the buffer."
@@ -348,7 +348,7 @@ Return `identity' when no mapping defined in `keystore-column-name-to-formatter-
         (setq cmd (char-after))
         (unless (eq cmd ?\s)
           ;; This is the key KEYSTORE-ENTRY.
-          (setq keystore-entry (tabulated-list-get-id (point)))
+          (setq keystore-entry (tabulated-list-get-entry (point)))
           (pcase cmd
             (?D (push keystore-entry delete-list))))
         (forward-line)))
