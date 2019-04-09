@@ -327,9 +327,11 @@ Return `identity' when no mapping defined in `keystore-column-name-to-formatter-
   (seq-position tabulated-list-format "alias"
                 (lambda (x y) (s-equals-p (car x) y))))
 
-(defun keystore--get-alias (id)
+(defun keystore--get-alias (&optional id)
   "Retrieve alias for keystore entry with ID."
-  (elt (cadr (assoc id tabulated-list-entries)) (keystore--get-alias-index)))
+  (if id
+      (elt (cadr (assoc id tabulated-list-entries)) (keystore--get-alias-index))
+    (elt (tabulated-list-get-entry (point)) (keystore--get-alias-index))))
 
 (defun keystore-render ()
   "Render the keystore buffer, move point to the beginning of the buffer."
@@ -442,7 +444,7 @@ Return `identity' when no mapping defined in `keystore-column-name-to-formatter-
   (interactive "d\nsDestination alias: ")
   
   (save-excursion
-    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos))))
+    (let ((alias (keystore--get-alias)))
       (when (y-or-n-p (format "Are you sure you want to change alias '%s' to '%s'? "
                               alias
                               destalias))
@@ -459,35 +461,32 @@ Return `identity' when no mapping defined in `keystore-column-name-to-formatter-
   "Generate a Certificate Signing Request (CSR) for the entry at POS.
 The CSR is saved in CSR-FILE."
   (interactive "d\nfCSR output file: ")
-  (let ((alias (keystore--get-alias (tabulated-list-get-id pos))))
-    (keystore-command "keytool"
-                      nil
-                      "-certreq"
-                      "-alias" alias
-                      "-file" csr-file
-                      (keystore--arg-keystore))))
+  (keystore-command "keytool"
+                    nil
+                    "-certreq"
+                    "-alias" (keystore--get-alias)
+                    "-file" csr-file
+                    (keystore--arg-keystore)))
 
 (defun keystore-gencert (pos csr-file)
   "Issue a certificate by the key entry at POS as a response to the certificate request CSR-FILE."
   (interactive "d\nfCSR file: ")
-  (let ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-        (cert-file (format "%s.pem" csr-file)))
-    (keystore-command "keytool"
-                      nil
-                      "-gencert"
-                      "-alias" alias
-                      (keystore--arg-keystore)
-                      "-infile" csr-file
-                      "-outfile" cert-file
-                      "-rfc")))
+  (keystore-command "keytool"
+                    nil
+                    "-gencert"
+                    "-alias" (keystore--get-alias)
+                    (keystore--arg-keystore)
+                    "-infile" csr-file
+                    "-outfile" (format "%s.pem" csr-file)
+                    "-rfc"))
 
 (defun keystore-exportcert (pos)
   "Export the certificate from the line at POS.
 Return the buffer containing the certificate."
   (interactive "d")
   (save-excursion
-    (let* ((alias (keystore--get-alias (tabulated-list-get-id pos)))
-           (cert )
+    (let* ((alias (keystore--get-alias))
+           (cert)
            (cert-buffer (get-buffer-create (format "%s.pem" alias))))
       (keystore-command "keytool"
                         cert-buffer
@@ -524,7 +523,7 @@ this function works by first creating a keystore with one entry in it using
   "Open a new buffer with the output of 'keytool -printcert' for entry at POS."
   (interactive "d")
   (let* ((pem-buffer (keystore-exportcert pos))
-         (alias (keystore--get-alias (tabulated-list-get-id pos)))
+         (alias (keystore--get-alias))
          (target-buffer (get-buffer-create (format "*printcert: %s*" alias)))
          (inhibit-read-only t))
     (with-current-buffer target-buffer
